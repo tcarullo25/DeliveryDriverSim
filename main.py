@@ -52,6 +52,7 @@ def initSim(map, orderQueue, drivers, totalMins):
         if orderQueue and orderQueue[0].timestep <= minute:
             currOrder = orderQueue[0]
             availableDrivers = getAvailableDrivers(drivers)
+            # can only assign order if there is an open driver
             if availableDrivers:
                 currOrder = orderQueue.pop(0)
                 closestDriver, (_, duration) = getClosestDriver(map, availableDrivers, currOrder)

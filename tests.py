@@ -2,18 +2,50 @@ from graphs import *
 from ordersAndDrivers import *
 import random
 
-def genTests(n, m, flatRate, numDrivers, durationRange, orderSpawnRate, totalMins):
+# https://www.kosbie.net/cmu/spring-21/15-112/notes/notes-2d-lists.html
+def maxItemLength(a):
+    maxLen = 0
+    rows = len(a)
+    cols = len(a[0])
+    for row in range(rows):
+        for col in range(cols):
+            maxLen = max(maxLen, len(str(a[row][col])))
+    return maxLen
+def print2dList(a):
+    if (a == []):
+        # So we don't crash accessing a[0]
+        print([])
+        return
+    rows, cols = len(a), len(a[0])
+    fieldWidth = maxItemLength(a)
+    print('[')
+    for row in range(rows):
+        print(' [ ', end='')
+        for col in range(cols):
+            if (col > 0): print(', ', end='')
+            print(str(a[row][col]).rjust(fieldWidth), end='')
+        print(' ]')
+    print(']')
+
+def genTest(n, m, flatRate, numDrivers, durationRange, orderSpawnRate, totalMins):
+    randomMap = RandomGridLayout(n, m, n * m, durationRange)
     orderCount = 0
     orderDuration = 0 
     numNodes = n * m 
     orderQueue = []
-    drivers = [Driver(i, random.randint(0, numNodes-1)) for i in range(0, numDrivers)]
+    drivers = [(i, random.randint(0, numNodes-1)) for i in range(0, numDrivers)]
     for minute in range(totalMins):
         if random.random() < orderSpawnRate:
             start = random.randint(0, numNodes-1)
             dest = random.randint(0, numNodes - 1)
-            orderQueue.append(Order(orderCount, start, dest, orderDuration, minute, flatRate))
+            orderQueue.append((orderCount, start, dest, orderDuration, minute, flatRate))
             orderCount += 1
+    #print("ADJACENCY MATRIX:\n", randomMap.adjMatrix)
+    #print("DRIVERS:\n", drivers)
+    #print("ORDER QUEUE:\n", orderQueue)
+
+genTest(6, 6, 7, 9, (3, 10), .4, 360)
+
 
 # TEST 1
 # LAYOUT: 5x5 GRID
@@ -96,3 +128,64 @@ def test1():
         drivers.append(Driver(id, start))
 
     return  map, orderQueue, totalMins, drivers
+
+
+# TEST 2
+# LAYOUT: 6x6 GRID
+# 9 DRIVERS, 6 HOUR PERIOD
+# FLAT RATE $7/order
+# EDGE DURATIONS RANGE (3, 10)
+def test2():
+    n = 6
+    m = 6
+    totalMins = 360
+    flatRate = 7
+    adjMatrix = \
+[
+ [ None,    7, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [    7, None,    9, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None,    9, None,    4, None, None, None, None,    4, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None,    4, None,   10, None, None, None, None,    4, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None,   10, None,    8, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None,    8, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [    7, None, None, None, None, None, None,    3, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None,    8, None, None, None, None,    3, None,    7, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None,    4, None, None, None, None,    7, None,    6, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None,    4, None, None, None, None,    6, None,    9, None, None, None, None,    3, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None,   10, None, None, None, None,    9, None,   10, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None,    8, None, None, None, None,   10, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None,    9, None, None, None, None, None, None,    9, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None,    9, None, None, None, None,    9, None,    7, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None,    8, None, None, None, None,    7, None,    4, None, None, None, None,    4, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None,    3, None, None, None, None,    4, None,    7, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None,    7, None,    3, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None,    3, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    3, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None,    3, None,    7, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None,    4, None, None, None, None,    7, None,    9, None, None, None, None,    5, None, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None,    9, None,    3, None, None, None, None,    8, None, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None,    3, None,    5, None, None, None, None,    8, None, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None,    5, None, None, None, None, None, None,   10, None, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    5, None, None, None, None,    8, None, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None,    5, None,    4, None, None, None, None,   10, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None,    4, None,    3, None, None, None, None,    8, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    3, None,    5, None, None, None, None,    8, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    5, None,    3, None, None, None, None,    6, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None,    3, None, None, None, None, None, None,    3 ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    3, None, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None,    3, None,    7, None, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    7, None,    4, None, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    4, None,    3, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None,    3, None,    3 ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    3, None, None, None, None,    3, None ]
+]
+
+
+
+'''DRIVERS:
+ [(0, 8), (1, 11), (2, 16), (3, 33), (4, 33), (5, 9), (6, 20), (7, 12), (8, 23)]
+ORDER QUEUE:
+ [(0, 33, 17, 0, 0, 7), (1, 6, 25, 0, 2, 7), (2, 23, 14, 0, 4, 7), (3, 11, 4, 0, 5, 7), (4, 10, 30, 0, 6, 7), (5, 28, 34, 0, 7, 7), (6, 11, 4, 0, 10, 7), (7, 33, 24, 0, 11, 7), (8, 22, 13, 0, 13, 7), (9, 32, 22, 0, 17, 7), (10, 14, 25, 0, 22, 7), (11, 18, 0, 0, 27, 7), (12, 17, 6, 0, 29, 7), (13, 35, 8, 0, 30, 7), (14, 2, 17, 0, 33, 7), (15, 26, 31, 0, 39, 7), (16, 28, 8, 0, 41, 7), (17, 18, 12, 0, 43, 7), (18, 7, 19, 0, 45, 7), (19, 2, 1, 0, 51, 7), (20, 6, 1, 0, 54, 7), (21, 11, 28, 0, 55, 7), (22, 0, 26, 0, 56, 7), (23, 12, 33, 0, 60, 7), (24, 15, 4, 0, 66, 7), (25, 23, 34, 0, 71, 7), (26, 6, 15, 0, 73, 7), (27, 10, 23, 0, 77, 7), (28, 13, 3, 0, 78, 7), (29, 33, 7, 0, 79, 7), (30, 15, 18, 0, 81, 7), (31, 25, 4, 0, 82, 7), (32, 29, 1, 0, 84, 7), (33, 34, 32, 0, 85, 7), (34, 6, 29, 0, 89, 7), (35, 10, 16, 0, 91, 7), (36, 22, 7, 0, 93, 7), (37, 10, 25, 0, 96, 7), (38, 13, 1, 0, 97, 7), (39, 20, 16, 0, 98, 7), (40, 31, 5, 0, 99, 7), (41, 7, 7, 0, 102, 7), (42, 2, 24, 0, 104, 7), (43, 12, 13, 0, 105, 7), (44, 3, 4, 0, 109, 7), (45, 10, 8, 0, 110, 7), (46, 16, 25, 0, 115, 7), (47, 18, 1, 0, 116, 7), (48, 6, 6, 0, 124, 7), (49, 27, 23, 0, 125, 7), (50, 8, 30, 0, 128, 7), (51, 35, 25, 0, 129, 7), (52, 28, 18, 0, 132, 7), (53, 25, 32, 0, 134, 7), (54, 15, 21, 0, 139, 7), (55, 18, 18, 0, 140, 7), (56, 7, 4, 0, 144, 7), (57, 10, 1, 0, 145, 7), (58, 6, 27, 0, 146, 7), (59, 7, 12, 0, 148, 7), (60, 14, 10, 0, 
+151, 7), (61, 8, 9, 0, 158, 7), (62, 11, 3, 0, 159, 7), (63, 11, 33, 0, 166, 7), (64, 32, 7, 0, 169, 7), (65, 30, 2, 0, 172, 7), (66, 23, 25, 0, 173, 7), (67, 7, 32, 0, 174, 7), (68, 11, 18, 0, 175, 7), (69, 7, 9, 0, 176, 7), (70, 5, 8, 
+0, 181, 7), (71, 25, 24, 0, 182, 7), (72, 20, 31, 0, 186, 7), (73, 3, 22, 0, 187, 7), (74, 26, 25, 0, 189, 7), (75, 33, 35, 0, 190, 7), (76, 17, 6, 0, 191, 7), (77, 5, 27, 0, 196, 7), (78, 16, 32, 0, 197, 7), (79, 30, 5, 0, 199, 7), (80, 26, 19, 0, 200, 7), (81, 0, 25, 0, 201, 7), (82, 29, 10, 0, 204, 7), (83, 28, 0, 0, 206, 7), (84, 10, 10, 0, 208, 7), (85, 29, 23, 0, 209, 7), (86, 28, 6, 0, 217, 7), (87, 7, 18, 0, 220, 7), (88, 4, 33, 0, 226, 7), (89, 4, 33, 0, 227, 7), (90, 13, 1, 0, 235, 7), (91, 7, 1, 0, 236, 7), (92, 30, 16, 0, 239, 7), (93, 29, 29, 0, 243, 7), (94, 33, 28, 0, 245, 7), (95, 4, 14, 0, 246, 7), (96, 17, 24, 0, 247, 7), (97, 0, 30, 0, 252, 7), (98, 11, 1, 0, 253, 7), (99, 22, 27, 0, 254, 7), (100, 21, 22, 0, 256, 7), (101, 19, 28, 0, 258, 7), (102, 29, 7, 0, 259, 7), (103, 20, 5, 0, 260, 7), (104, 16, 17, 0, 262, 7), (105, 3, 13, 0, 266, 7), (106, 3, 31, 0, 267, 7), (107, 8, 2, 0, 268, 7), (108, 16, 24, 0, 272, 7), (109, 21, 12, 0, 279, 7), (110, 32, 35, 0, 282, 7), (111, 30, 16, 0, 287, 7), (112, 14, 28, 0, 290, 7), (113, 19, 32, 0, 292, 7), (114, 19, 21, 0, 299, 7), (115, 16, 15, 0, 301, 7), (116, 29, 26, 0, 302, 7), (117, 7, 6, 0, 307, 7), (118, 0, 15, 0, 310, 7), (119, 4, 24, 0, 311, 7), (120, 22, 16, 0, 312, 7), (121, 14, 30, 0, 320, 7), (122, 27, 26, 0, 321, 7), (123, 29, 0, 0, 323, 7), (124, 27, 18, 0, 327, 7), (125, 0, 34, 0, 330, 7), (126, 9, 14, 0, 331, 7), (127, 24, 34, 0, 336, 7), (128, 33, 27, 0, 339, 7), (129, 12, 4, 0, 341, 7), (130, 17, 14, 0, 342, 7), (131, 14, 25, 0, 344, 7), (132, 23, 5, 0, 346, 7), (133, 8, 1, 0, 349, 7), (134, 4, 3, 0, 351, 7), (135, 5, 10, 0, 352, 7), (136, 13, 13, 0, 354, 
+7), (137, 23, 28, 0, 356, 7)]'''

@@ -35,16 +35,15 @@ class GridLayout:
 
 # USED ONLY FOR RANDOMNESS
 class RandomGridLayout:
-    def __init__(self, n, m, numNodes, durationgRange):
+    def __init__(self, n, m, numNodes, durationRange):
         self.n = n 
         self.m = m
         self.numNodes = numNodes
+        self.minDuration, self.maxDuration = durationRange
         self.G = self.createGraph()
         self.adjMatrix = self.createAdjMatrix(numNodes, self.G)
-        self.minDuration, self.maxDuration = durationgRange
         
     # creates a grid system graph
-    
     def createGraph(self):
         G = nx.Graph()
         rows, cols = self.n, self.m
