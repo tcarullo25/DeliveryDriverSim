@@ -96,9 +96,8 @@ def chooseLayout(graphType, testNum):
     return displayResults(drivers, ordersCompleted, totalMins)
 
 graphType = 'grid'
-testNum = 1
+testNum = 4
 chooseLayout(graphType, testNum)
-
 
 #UNCOMMENT FOR MORE IN-DEPTH ANALYSIS
 #import statistics
