@@ -13,3 +13,5 @@
 # not currently reflecting driver distance as they proceed in route
 
 # if order is overdue, increase price ? 
+
+#TODO: make genTest function print a string of the actual function???
