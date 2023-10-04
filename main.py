@@ -1,8 +1,7 @@
 from graphs import *
 from ordersAndDrivers import * 
 from tests import *
-import random
- 
+
 def getOrderDuration(map, currLoc, orderLoc):
     shortestPath = nx.shortest_path(map.G, 
                     source=currLoc, target=orderLoc)
@@ -25,14 +24,7 @@ def getClosestDriver(map, drivers, currOrder):
             bestDriver = driver
     return bestDriver, bestDur
 
-def initSim(map, orderQueue, numNodes, numDrivers, totalMins):
-    drivers = []
-
-    for i in range(numDrivers):
-        # get random starting location and assign driver ID
-        startLoc = random.randint(0, numNodes-1)
-        drivers.append(Driver(i, startLoc))
-
+def initSim(map, orderQueue, drivers, totalMins):
     ordersCompleted = 0
 
     for minute in range(totalMins):
@@ -72,22 +64,20 @@ def displayResults(drivers, ordersCompleted, totalMins):
     print(res)
     return avgRate
 
-def chooseLayout(graphType, numNodes, numDrivers, testNum):
+def chooseLayout(graphType, testNum):
     if graphType == 'grid':
-        map, orderQueue, totalMins = eval(f'test{testNum}()')
+        map, orderQueue, totalMins, drivers = eval(f'test{testNum}()')
+
     #print("matrix:\n", map.adjMatrix)
     #print()
 
-    drivers, ordersCompleted = initSim(map, orderQueue, numNodes, numDrivers, totalMins)
+    drivers, ordersCompleted = initSim(map, orderQueue,  drivers, totalMins)
     return displayResults(drivers, ordersCompleted, totalMins)
 
 graphType = 'grid'
-n = 5
-m = 5
-numNodes = n*m
-numDrivers = 15
 testNum = 1
-chooseLayout(graphType, numNodes, numDrivers, testNum)
+chooseLayout(graphType, testNum)
+
 
 #UNCOMMENT FOR MORE IN-DEPTH ANALYSIS
 #import statistics

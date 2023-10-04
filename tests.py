@@ -1,13 +1,15 @@
 from graphs import *
 from ordersAndDrivers import *
 
-# GRID STYLE TEST 5x5 6 HOUR PERIOD
+# TEST 1
+# LAYOUT: 5x5 GRID
+# 8 DRIVERS, 6 HOUR PERIOD
+# FLAT RATE $7/order
 def test1():
     n = 5
     m = 5
-    flatFee = 7
+    flatRate = 7
     totalMins = 360
-
     # RANDOM GEN DURATIONS (RANGE 5, 30)
     adjMatrix =  \
     [[None, 22, None, None, None, 24, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None], 
@@ -59,10 +61,25 @@ def test1():
     [129, 13, 6, 331], [130, 7, 18, 332], [131, 12, 4, 333], [132, 2, 1, 335], [133, 3, 19, 339], [134, 11, 15, 340], [135, 21, 2, 349], [136, 14, 7, 350], 
     [137, 18, 24, 355], [138, 0, 21, 359]]
     
-    orderQueue = []
-    orderDuration = 0 # will update when assigned to driver
-    for id, start, dest, timestep in orderInfo:
-        orderQueue.append(Order(id, start, dest, orderDuration, timestep, flatFee))
+    driverInfo = \
+    [[0, 13],
+    [1, 8],
+    [2, 18],
+    [3, 23],
+    [4, 21],
+    [5, 14],
+    [6, 24],
+    [7, 3]]
 
-    return map, orderQueue, totalMins
+    orderQueue = []
+    drivers = []
+    orderDuration = 0 # will update when assigned to driver
+    # INIT ORDERS
+    for id, start, dest, timestep in orderInfo:
+        orderQueue.append(Order(id, start, dest, orderDuration, timestep, flatRate))
+    # INIT DRIVERS
+    for id, start in driverInfo:
+        drivers.append(Driver(id, start))
+
+    return  map, orderQueue, totalMins, drivers
         
