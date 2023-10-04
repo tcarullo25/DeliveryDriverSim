@@ -1,9 +1,11 @@
-#make bunch of predetermined requests (order time that comes in, starting location, destination) in separate file (deterministic) (also for the grid layouts too)
+#??: make bunch of predetermined requests (order time that comes in, starting location, destination) in separate file (deterministic) (also for the grid layouts too)
 #add min and max in matplotlib, charts that show distributions 
-# add how far they traveled
+
+# add how far driver traveled
+
 
 #add new attribute to order for ending destination
 
-#DONE: calcualte all distances to pickup locations, pick shortest distance driver
+#DONE: calculate all distances to pickup locations, pick shortest distance driver
 
 #DONE: get rid of distance

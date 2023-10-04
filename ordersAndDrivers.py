@@ -1,10 +1,11 @@
 #TODO: make customers involved as well
 class Order:
-    def __init__(self, id, start, dest, duration, price):
+    def __init__(self, id, start, dest, duration, timestep, price):
         self.id = id
         self.loc = start
         self.dest = dest
         self.duration = duration
+        self.timestep = timestep
         self.price = price
 
 class Driver:

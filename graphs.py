@@ -3,6 +3,7 @@ import random
 
 MAX_DURATION = 30
 
+# USED ONLY FOR RANDOMNESS
 def createAdjMatrix(numNodes, G):
     adjMatrix = [[None for _ in range(numNodes)] for _ in range(numNodes) ]
     seen = set()

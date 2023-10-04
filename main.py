@@ -1,5 +1,6 @@
 from graphs import *
 from ordersAndDrivers import * 
+from tests import *
 import random
  
 def getOrderDuration(map, currLoc, orderLoc):
@@ -24,30 +25,19 @@ def getClosestDriver(map, drivers, currOrder):
             bestDriver = driver
     return bestDriver, bestDur
 
-def initSim(map, numNodes, numDrivers, totalMins):
+def initSim(map, orderQueue, numNodes, numDrivers, totalMins):
     drivers = []
+
     for i in range(numDrivers):
         # get random starting location and assign driver ID
         startLoc = random.randint(0, numNodes-1)
         drivers.append(Driver(i, startLoc))
 
-    orderSpawnrate = .4 
-    flatFee = 7
     ordersCompleted = 0
-    orderQueue = []
-    
-    for minute in range(totalMins):
-        # check if new order has spawned
-        if random.random() < orderSpawnrate:
-            #NOTE: could be the same location as a driver
-            orderLoc = random.randint(0, numNodes-1)
-            orderDest = random.randint(0, numNodes-1)
-            orderDuration = 0 # will update when assigned to driver
-            id = minute
-            currOrder = Order(id, orderLoc, orderDest, orderDuration, flatFee)
-            orderQueue.append(currOrder)
 
-        if orderQueue:
+    for minute in range(totalMins):
+        # peek at next order in queue to see if it's ready to release
+        if orderQueue and orderQueue[0].timestep == minute:
             currOrder = orderQueue.pop(0)
             closestDriver, duration = getClosestDriver(map, drivers, currOrder)
             currOrder.duration = duration
@@ -76,14 +66,16 @@ def displayResults(drivers, ordersCompleted, totalMins):
         res += f'• Driver {driver.id} received ${driver.earnings} and completed {driver.totalOrders} orders\n'
     avgRate = sumOfRates/len(drivers)
     res += f'The average wage across all drivers is: ${round(avgRate, 2)}/hr'
-    #print(res)
+    print(res)
     return avgRate
 
-def chooseLayout(graphType, n, m, numNodes, numDrivers, totalMins):
+def chooseLayout(graphType, numNodes, numDrivers, testNum):
     if graphType == 'grid':
-        map = GridLayout(n, m, numNodes)
-    drivers, ordersCompleted = initSim(map, numNodes, numDrivers, totalMins)
-    print(map.adjMatrix)
+        map, orderQueue, totalMins = eval(f'test{testNum}()')
+    #print("matrix:\n", map.adjMatrix)
+    #print()
+
+    drivers, ordersCompleted = initSim(map, orderQueue, numNodes, numDrivers, totalMins)
     return displayResults(drivers, ordersCompleted, totalMins)
 
 graphType = 'grid'
@@ -91,9 +83,8 @@ n = 5
 m = 5
 numNodes = n*m
 numDrivers = 15
-totalMins = 360
-chooseLayout(graphType, n, m, numNodes, numDrivers, totalMins)
-
+testNum = 1
+chooseLayout(graphType, numNodes, numDrivers, testNum)
 
 #UNCOMMENT FOR MORE IN-DEPTH ANALYSIS
 #import statistics
