@@ -1,10 +1,25 @@
 from graphs import *
 from ordersAndDrivers import *
+import random
+
+def genTests(n, m, flatRate, numDrivers, durationRange, orderSpawnRate, totalMins):
+    orderCount = 0
+    orderDuration = 0 
+    numNodes = n * m 
+    orderQueue = []
+    drivers = [Driver(i, random.randint(0, numNodes-1)) for i in range(0, numDrivers)]
+    for minute in range(totalMins):
+        if random.random() < orderSpawnRate:
+            start = random.randint(0, numNodes-1)
+            dest = random.randint(0, numNodes - 1)
+            orderQueue.append(Order(orderCount, start, dest, orderDuration, minute, flatRate))
+            orderCount += 1
 
 # TEST 1
 # LAYOUT: 5x5 GRID
 # 8 DRIVERS, 6 HOUR PERIOD
 # FLAT RATE $7/order
+# EDGE DURATIONS RANGE (5, 30)
 def test1():
     n = 5
     m = 5
@@ -38,8 +53,7 @@ def test1():
     [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 23, None, None, None, 6, None, 11], 
     [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 6, None, None, None, 11, None]]
 
-    map = GridLayout(n, m, n*m)
-    map.adjMatrix = adjMatrix
+    map = GridLayout(n, m, n*m, adjMatrix)
     
     orderInfo = \
     [[0, 8, 16, 0], [1, 20, 9, 1], [2, 14, 11, 4], [3, 20, 2, 8], [4, 14, 23, 9], [5, 8, 15, 12], [6, 21, 7, 16], [7, 12, 6, 18], [8, 11, 12, 20], 
@@ -82,4 +96,3 @@ def test1():
         drivers.append(Driver(id, start))
 
     return  map, orderQueue, totalMins, drivers
-        

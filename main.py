@@ -2,38 +2,61 @@ from graphs import *
 from ordersAndDrivers import * 
 from tests import *
 
-def getOrderDuration(map, currLoc, orderLoc):
-    shortestPath = nx.shortest_path(map.G, 
-                    source=currLoc, target=orderLoc)
+def getOrderDuration(map, currLoc, orderLoc, orderDest):
+    currToOrderSP = nx.shortest_path(map.G, 
+                    source=currLoc, target=orderLoc, weight = 'weight')
+    orderToDestSP = nx.shortest_path(map.G, 
+                    source=orderLoc, target=orderDest, weight = 'weight')
     totalTime = 0
+    currLocToOrderDuration = 0
 
-    for i in range(1, len(shortestPath)):
-        currNode, prevNode = shortestPath[i], shortestPath[i-1]
+    # currLoc -> orderLoc duration
+    for i in range(1, len(currToOrderSP)):
+        currNode, prevNode = currToOrderSP[i], currToOrderSP[i-1]
         duration = map.adjMatrix[currNode][prevNode]
         totalTime += duration
 
-    return totalTime
+    currLocToOrderDuration = totalTime
+
+    # orderLoc -> orderDest duration
+    for i in range(1, len(orderToDestSP)):
+        currNode, prevNode = orderToDestSP[i], orderToDestSP[i-1]
+        duration = map.adjMatrix[currNode][prevNode]
+        totalTime += duration
+
+    return currLocToOrderDuration, totalTime
 
 def getClosestDriver(map, drivers, currOrder):
     bestDur = None
     bestDriver = None
     for driver in drivers:
-        currDriverDuration = getOrderDuration(map, driver.currLoc, currOrder.loc)
-        if bestDur == None or currDriverDuration < bestDur:
-            bestDur = currDriverDuration
+        currLocToOrderDuration, totalTime = getOrderDuration(map, driver.currLoc, currOrder.loc, currOrder.dest)
+        # only compare duration from curr loc to order location, not total time
+        if bestDur == None or currLocToOrderDuration < bestDur[0]:
+            bestDur = currLocToOrderDuration, totalTime
             bestDriver = driver
     return bestDriver, bestDur
+
+def getAvailableDrivers(drivers):
+    availableDrivers = []
+    for driver in drivers:
+        if driver.order == None:
+            availableDrivers.append(driver)
+    return availableDrivers
 
 def initSim(map, orderQueue, drivers, totalMins):
     ordersCompleted = 0
 
     for minute in range(totalMins):
         # peek at next order in queue to see if it's ready to release
-        if orderQueue and orderQueue[0].timestep == minute:
-            currOrder = orderQueue.pop(0)
-            closestDriver, duration = getClosestDriver(map, drivers, currOrder)
-            currOrder.duration = duration
-            closestDriver.addOrder(currOrder)
+        if orderQueue and orderQueue[0].timestep <= minute:
+            currOrder = orderQueue[0]
+            availableDrivers = getAvailableDrivers(drivers)
+            if availableDrivers:
+                currOrder = orderQueue.pop(0)
+                closestDriver, (_, duration) = getClosestDriver(map, availableDrivers, currOrder)
+                currOrder.duration = duration
+                closestDriver.addOrder(currOrder)
 
         for driver in drivers:
                 if driver.order != None:
@@ -67,9 +90,6 @@ def displayResults(drivers, ordersCompleted, totalMins):
 def chooseLayout(graphType, testNum):
     if graphType == 'grid':
         map, orderQueue, totalMins, drivers = eval(f'test{testNum}()')
-
-    #print("matrix:\n", map.adjMatrix)
-    #print()
 
     drivers, ordersCompleted = initSim(map, orderQueue,  drivers, totalMins)
     return displayResults(drivers, ordersCompleted, totalMins)
