@@ -45,8 +45,11 @@ def initSim(map, orderQueue, numNodes, numDrivers, totalMins):
 
         for driver in drivers:
                 if driver.order != None:
-                    # order duration decrease by one timestep
+                    # decrease order duration by one timestep,
+                    # increase driver's total order time
                     driver.order.duration -= 1
+                    driver.totalOrderTime += 1
+
                     # check if completed order and if so reflect driver's status
                     if driver.order.duration <= 0:
                         ordersCompleted += 1
@@ -63,7 +66,7 @@ def displayResults(drivers, ordersCompleted, totalMins):
     for driver in drivers:
         driverRate = driver.earnings / (totalMins/60)
         sumOfRates += driverRate
-        res += f'• Driver {driver.id} received ${driver.earnings} and completed {driver.totalOrders} orders\n'
+        res += f'• Driver {driver.id} received ${driver.earnings}, completed {driver.totalOrders} orders and it took them {driver.totalOrderTime} timesteps.\n'
     avgRate = sumOfRates/len(drivers)
     res += f'The average wage across all drivers is: ${round(avgRate, 2)}/hr'
     print(res)

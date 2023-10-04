@@ -1,7 +1,7 @@
 #??: make bunch of predetermined requests (order time that comes in, starting location, destination) in separate file (deterministic) (also for the grid layouts too)
 #add min and max in matplotlib, charts that show distributions 
 
-# add how far driver traveled
+#DONE add how far driver traveled
 
 
 #add new attribute to order for ending destination

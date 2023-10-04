@@ -15,6 +15,7 @@ class Driver:
         self.order = None
         self.earnings = 0
         self.totalOrders = 0
+        self.totalOrderTime = 0
     
     def addOrder(self, order):
         self.order = order
