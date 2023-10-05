@@ -41,6 +41,7 @@ def plotOrdersPerDriver(drivers):
     plt.xlabel('Driver ID')
     plt.xticks(np.arange(min(driverIDs), max(driverIDs) + 1, 1.0))
     plt.ylabel('Number of Orders')
+    plt.yticks(np.arange(min(orders), max(orders) + 1, 1.0))
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
     plt.tight_layout()
     mplcursors.cursor(hover=True)
@@ -74,7 +75,7 @@ def plotDelayedOrders(totalOrders, delayedOrders):
     fulfilledImmediately = totalOrders - delayedOrders
     labels = ['Fulfilled Immediately', 'Delayed']
     sizes = [fulfilledImmediately, delayedOrders]
-
+    print(fulfilledImmediately / totalOrders)
     plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=['green', 'red'])
     plt.title('Proportion of Delayed Orders')
     plt.tight_layout()

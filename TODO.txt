@@ -1,17 +1,5 @@
-#DONE: add min and max in matplotlib, charts that show distributions 
-
-#DONE: make bunch of predetermined requests (order time that comes in, starting location, destination) in separate file (deterministic) (also for the grid layouts too)
-
-#DONE add how far driver traveled
-
-#DONE: add new attribute to order for ending destination
-
-#DONE: calculate all distances to pickup locations, pick shortest distance driver
-
-#DONE: get rid of distance
-
 # not currently reflecting driver distance as they proceed in route
 
 # if order is overdue, increase price ? 
 
-#DONE: make genTest function print a string of the actual function
+#NOTE: in real world orders shouldn't really take much longer than 15-30 minutes max

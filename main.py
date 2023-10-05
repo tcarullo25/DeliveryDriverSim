@@ -121,5 +121,5 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 2
+testNum = 5
 chooseLayout(graphType, testNum)
