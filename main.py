@@ -1,6 +1,7 @@
 from graphs import *
 from ordersAndDrivers import * 
 from tests import *
+from visualizations import *
 
 def getOrderDuration(map, currLoc, orderLoc, orderDest):
     currToOrderSP = nx.shortest_path(map.G, 
@@ -45,7 +46,10 @@ def getAvailableDrivers(drivers):
     return availableDrivers
 
 def initSim(map, orderQueue, drivers, totalMins):
+    # KEEP TRACK OF ORDER INFORMATION FOR DATA VISUALIZATIONS
     ordersCompleted = 0
+    delayedOrders = 0
+    finishedOrders = []
 
     for minute in range(totalMins):
         # peek at next order in queue to see if it's ready to release
@@ -55,28 +59,49 @@ def initSim(map, orderQueue, drivers, totalMins):
             # can only assign order if there is an open driver
             if availableDrivers:
                 currOrder = orderQueue.pop(0)
-                closestDriver, (_, duration) = getClosestDriver(map, availableDrivers, currOrder)
-                currOrder.duration = duration
+                closestDriver, (_, totalDuration) = getClosestDriver(map, availableDrivers, currOrder)
+                currOrder.duration = totalDuration
                 closestDriver.addOrder(currOrder)
+            else:
+                # if not already delayed
+                if orderQueue[0].delayedLength == 0:
+                    delayedOrders += 1
+                orderQueue[0].delayedLength += 1
 
         for driver in drivers:
                 if driver.order != None:
                     # decrease order duration by one timestep,
-                    # increase driver's total order time
+                    # increase driver's curr order time
                     driver.order.duration -= 1
-                    driver.totalOrderTime += 1
-
+                    driver.currOrderTime += 1
                     # check if completed order and if so reflect driver's status
                     if driver.order.duration <= 0:
                         ordersCompleted += 1
+                        finishedOrders.append(driver.order)
                         driver.currLoc = driver.order.loc
-                        driver.totalOrders += 1
                         driver.earnings += driver.order.price
+                        driver.totalOrders += 1
+                        driver.totalOrderTime += driver.currOrderTime
+                        driver.orderTimes.append(driver.currOrderTime)
+                        driver.currOrderTime = 0
                         driver.order = None
+                else:
+                    driver.idleTime += 1
+    return drivers, (ordersCompleted, delayedOrders, finishedOrders)
 
-    return drivers, ordersCompleted
+def displayVisualizations(drivers, orderInfo):
+    ordersCompleted, delayedOrders, finishedOrders = orderInfo
+    plotDriverEarnings(drivers)
+    plotOrderTimes(drivers)
+    plotOrdersPerDriver(drivers)
+    plotDeliveryDurations(drivers)
+    plotIdleTimes(drivers)
+    plotDelayedOrders(ordersCompleted, delayedOrders)
+    allOrders = [driver.order for driver in drivers if driver.order] + finishedOrders
+    plotOrderDelayDurations(allOrders)
 
-def displayResults(drivers, ordersCompleted, totalMins):
+def displayResults(drivers, orderInfo, totalMins):
+    ordersCompleted, _, _ = orderInfo
     res = f'There was a total of {ordersCompleted} orders completed across all drivers.\nThe earnings for each driver are as follows:\n'
     sumOfRates = 0
     for driver in drivers:
@@ -86,25 +111,15 @@ def displayResults(drivers, ordersCompleted, totalMins):
     avgRate = sumOfRates/len(drivers)
     res += f'The average wage across all drivers is: ${round(avgRate, 2)}/hr'
     print(res)
-    return avgRate
+    displayVisualizations(drivers, orderInfo)
 
 def chooseLayout(graphType, testNum):
     if graphType == 'grid':
         map, orderQueue, totalMins, drivers = eval(f'test{testNum}()')
 
-    drivers, ordersCompleted = initSim(map, orderQueue,  drivers, totalMins)
-    return displayResults(drivers, ordersCompleted, totalMins)
+    drivers, orderInfo = initSim(map, orderQueue,  drivers, totalMins)
+    displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 4
+testNum = 2
 chooseLayout(graphType, testNum)
-
-#UNCOMMENT FOR MORE IN-DEPTH ANALYSIS
-#import statistics
-#res = []
-#for numDrivers in range(20, 220, 20):
-#    data = []
-#    for _ in range(100):
-#        data.append(chooseLayout(graphType, n, m, numNodes, numDrivers, totalMins))
-#    res.append(statistics.median(data))
-#print(res)

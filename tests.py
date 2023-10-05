@@ -2,7 +2,7 @@ from graphs import *
 from ordersAndDrivers import *
 import random
 
-# https://www.kosbie.net/cmu/spring-21/15-112/notes/notes-2d-lists.html
+
 def maxItemLength(a):
     maxLen = 0
     rows = len(a)
@@ -12,6 +12,7 @@ def maxItemLength(a):
             maxLen = max(maxLen, len(str(a[row][col])))
     return maxLen
 
+# https://www.kosbie.net/cmu/spring-21/15-112/notes/notes-2d-lists.html
 def format2dList(a):
     if (a == []):
         return "[]"
@@ -32,11 +33,9 @@ def format2dList(a):
     lines.append(']')
     return '\n'.join(lines)
 
-
 def genTest(testNum, n, m, flatRate, numDrivers, durationRange, orderSpawnRate, totalMins):
     randomMap = RandomGridLayout(n, m, n * m, durationRange)
     orderCount = 0
-    orderDuration = 0 
     numNodes = n * m 
     orderQueue = []
     drivers = [(i, random.randint(0, numNodes-1)) for i in range(0, numDrivers)]

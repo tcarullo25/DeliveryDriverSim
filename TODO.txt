@@ -1,4 +1,4 @@
-#add min and max in matplotlib, charts that show distributions 
+#DONE: add min and max in matplotlib, charts that show distributions 
 
 #DONE: make bunch of predetermined requests (order time that comes in, starting location, destination) in separate file (deterministic) (also for the grid layouts too)
 
@@ -14,4 +14,4 @@
 
 # if order is overdue, increase price ? 
 
-#TODO: make genTest function print a string of the actual function???
+#DONE: make genTest function print a string of the actual function
