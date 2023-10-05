@@ -75,7 +75,6 @@ def plotDelayedOrders(totalOrders, delayedOrders):
     fulfilledImmediately = totalOrders - delayedOrders
     labels = ['Fulfilled Immediately', 'Delayed']
     sizes = [fulfilledImmediately, delayedOrders]
-    print(fulfilledImmediately / totalOrders)
     plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=['green', 'red'])
     plt.title('Proportion of Delayed Orders')
     plt.tight_layout()
