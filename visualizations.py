@@ -2,14 +2,14 @@ import matplotlib.pyplot as plt
 import mplcursors
 import numpy as np
 
-def plotDriverEarnings(drivers):
+def plotDriverEarnings(drivers, avgRate):
     earnings = [driver.earnings for driver in drivers]
     driverIDs = [driver.id for driver in drivers]
 
     plt.scatter(driverIDs, earnings, color='blue', label='Earnings')
     avgEarning = np.mean(earnings)
     plt.axhline(avgEarning, color='red', linestyle='dashed', linewidth=2, label="Avg Earning")
-    plt.title('Driver Earnings')
+    plt.title(f'Driver Earnings\n(Average Rate: ${avgRate}/hr)')
     plt.xlabel('Driver ID')
     plt.xticks(np.arange(min(driverIDs), max(driverIDs) + 1, 1.0))
     plt.ylabel('Earnings ($)')

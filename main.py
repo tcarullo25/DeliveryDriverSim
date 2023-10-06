@@ -89,9 +89,9 @@ def initSim(map, orderQueue, drivers, totalMins):
                     driver.idleTime += 1
     return drivers, (ordersCompleted, delayedOrders, finishedOrders)
 
-def displayVisualizations(drivers, orderInfo):
+def displayVisualizations(drivers, orderInfo, avgRate):
     ordersCompleted, delayedOrders, finishedOrders = orderInfo
-    plotDriverEarnings(drivers)
+    plotDriverEarnings(drivers, avgRate)
     plotOrderTimes(drivers)
     plotOrdersPerDriver(drivers)
     plotDeliveryDurations(drivers)
@@ -111,7 +111,7 @@ def displayResults(drivers, orderInfo, totalMins):
     avgRate = sumOfRates/len(drivers)
     res += f'The average wage across all drivers is: ${round(avgRate, 2)}/hr'
     print(res)
-    displayVisualizations(drivers, orderInfo)
+    displayVisualizations(drivers, orderInfo, avgRate)
 
 def chooseLayout(graphType, testNum):
     if graphType == 'grid':
