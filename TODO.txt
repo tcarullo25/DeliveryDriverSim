@@ -2,4 +2,4 @@
 
 # if order is overdue, increase price ? 
 
-#NOTE: in real world orders shouldn't really take much longer than 15-30 minutes max
+# give drivers policies & name driver's by their trait to better understand data
