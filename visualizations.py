@@ -2,6 +2,17 @@ import matplotlib.pyplot as plt
 import mplcursors
 import numpy as np
 
+def displayVisualizations(drivers, orderInfo, avgRate):
+    ordersCompleted, delayedOrders, finishedOrders = orderInfo
+    plotDriverEarnings(drivers, avgRate)
+    plotOrderTimes(drivers)
+    plotOrdersPerDriver(drivers)
+    plotDeliveryDurations(drivers)
+    plotIdleTimes(drivers)
+    plotDelayedOrders(ordersCompleted, delayedOrders)
+    allOrders = [driver.order for driver in drivers if driver.order] + finishedOrders
+    plotOrderDelayDurations(allOrders)
+    
 def plotDriverEarnings(drivers, avgRate):
     earnings = [driver.earnings for driver in drivers]
     driverIDs = [driver.id for driver in drivers]

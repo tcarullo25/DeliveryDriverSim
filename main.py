@@ -89,17 +89,6 @@ def initSim(map, orderQueue, drivers, totalMins):
                     driver.idleTime += 1
     return drivers, (ordersCompleted, delayedOrders, finishedOrders)
 
-def displayVisualizations(drivers, orderInfo, avgRate):
-    ordersCompleted, delayedOrders, finishedOrders = orderInfo
-    plotDriverEarnings(drivers, avgRate)
-    plotOrderTimes(drivers)
-    plotOrdersPerDriver(drivers)
-    plotDeliveryDurations(drivers)
-    plotIdleTimes(drivers)
-    plotDelayedOrders(ordersCompleted, delayedOrders)
-    allOrders = [driver.order for driver in drivers if driver.order] + finishedOrders
-    plotOrderDelayDurations(allOrders)
-
 def displayResults(drivers, orderInfo, totalMins):
     ordersCompleted, _, _ = orderInfo
     res = f'There was a total of {ordersCompleted} orders completed across all drivers.\nThe earnings for each driver are as follows:\n'
