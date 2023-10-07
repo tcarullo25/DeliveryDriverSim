@@ -97,8 +97,8 @@ def displayResults(drivers, orderInfo, totalMins):
         driverRate = driver.earnings / (totalMins/60)
         sumOfRates += driverRate
         res += f'• Driver {driver.id} received ${driver.earnings}, completed {driver.totalOrders} orders and it took them {driver.totalOrderTime} timesteps.\n'
-    avgRate = sumOfRates/len(drivers)
-    res += f'The average wage across all drivers is: ${round(avgRate, 2)}/hr'
+    avgRate = round(sumOfRates/len(drivers),2)
+    res += f'The average wage across all drivers is: ${avgRate}/hr'
     print(res)
     displayVisualizations(drivers, orderInfo, avgRate)
 
@@ -110,5 +110,5 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 7
+testNum = 1
 chooseLayout(graphType, testNum)
