@@ -65,7 +65,9 @@ def genTest(testNum, n, m, flatRate, numDrivers, durationRange, orderSpawnRate, 
     orderCount = 0
     numNodes = n * m 
     orderQueue = []
+    prices = []
     drivers = [(i, random.randint(0, numNodes-1)) for i in range(0, numDrivers)]
+    tipBuckets = [0, .10, .15, .18, .2, .3]
     for minute in range(totalMins):
         if random.random() < orderSpawnRate:
             start = random.randint(0, numNodes-1)
@@ -84,6 +86,7 @@ def test{testNum}():
         n = {n}
         m = {m}
         flatRate = {flatRate}
+        tipBuckets = {tipBuckets}
         totalMins = {totalMins}
         adjMatrix = \\
         {format2dList(randomMap.adjMatrix)}
@@ -97,7 +100,8 @@ def test{testNum}():
         orderDuration = 0 # will update when assigned to driver
         # INIT ORDERS
         for id, start, dest, timestep in orderInfo:
-            orderQueue.append(Order(id, start, dest, orderDuration, timestep, flatRate))
+            pay = flatRate* (1 + random.choice(tipBuckets))
+            orderQueue.append(Order(id, start, dest, orderDuration, timestep, pay))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))
@@ -105,7 +109,7 @@ def test{testNum}():
         return map, orderQueue, totalMins, drivers'''
     return testFunction
 
-#print(genTest(7, 5, 5, 7, 10, (3, 10), .4, 360))
+#print(genTest(8, 6, 6, 4, 10, (3, 10), .4, 360))
 
 # TEST 1
 # LAYOUT: 5x5 GRID
@@ -961,3 +965,4 @@ def test7():
             drivers.append(Driver(id, start))
 
         return map, orderQueue, totalMins, drivers
+
