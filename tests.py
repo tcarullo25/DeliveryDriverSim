@@ -69,7 +69,7 @@ def genTest(testNum, n, m, flatRate, numDrivers, durationRange, orderSpawnRate, 
     for minute in range(totalMins):
         if random.random() < orderSpawnRate:
             start = random.randint(0, numNodes-1)
-            # dest should be in vicinity of start - same quadrant
+            # dest should be in vicinity of start - same quadrant <- change to threshold
             dest = genDestFromSameQuadrant(start, n, m)
             orderQueue.append((orderCount, start, dest, minute))
             orderCount += 1
@@ -931,16 +931,13 @@ def test7():
  [ None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None,    3, None, None, None,    4, None, None, None, None ],
  [ None, None, None, None, None, None, None, None, None, None, None,    3, None, None, None,    3, None,    4, None, None, None,    8, None, None, None ],
  [ None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None,    4, None,   10, None, None, None,    6, None, None ],
- [ None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None,   10, None,    8, None, None, None,   
- 3, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None,   10, None,    8, None, None, None,   3, None ],
  [ None, None, None, None, None, None, None, None, None, None, None, None, None, None,    3, None, None, None,    8, None, None, None, None, None,    8 ],
  [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    4, None, None, None, None, None,    9, None, None, None ],
  [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None,    9, None,    4, None, None ],
- [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None,    4, None,   
- 3, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None,    4, None,    3, None ],
  [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    3, None, None, None,    3, None,    8 ],
- [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None,   
- 8, None ]
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None,    8, None ]
 ]
         map = GridLayout(n, m, n * m, adjMatrix)
         orderInfo = \

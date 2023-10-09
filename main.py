@@ -78,7 +78,7 @@ def initSim(map, orderQueue, drivers, totalMins):
                     if driver.order.duration <= 0:
                         ordersCompleted += 1
                         finishedOrders.append(driver.order)
-                        driver.currLoc = driver.order.loc
+                        driver.currLoc = driver.order.dest
                         driver.earnings += driver.order.price
                         driver.totalOrders += 1
                         driver.totalOrderTime += driver.currOrderTime
@@ -86,6 +86,7 @@ def initSim(map, orderQueue, drivers, totalMins):
                         driver.currOrderTime = 0
                         driver.order = None
                 else:
+                    # add non productive time which is idle time + time from driver loc to order pickup
                     driver.idleTime += 1
     return drivers, (ordersCompleted, delayedOrders, finishedOrders)
 
@@ -110,5 +111,5 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 1
+testNum = 7
 chooseLayout(graphType, testNum)

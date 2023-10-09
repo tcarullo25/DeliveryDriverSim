@@ -6,3 +6,17 @@
 
 # order objects should have the price of the actual order, then tip should be calculated from that and added to base pay
 # flat fee should be a separate parameter (like a base pay)
+
+# do threshold instead of quadrant
+
+# add non productive time which is idle time + time from driver loc to order pickup
+
+# adding order while have a current order
+
+#TODO: pickup time - the timestep the restaurant will have it ready
+#TODO: dropoff time - delivery by time (maybe measured by reputation of restaurant?)
+
+#TODO: reputation score for drivers based off meeting the pickup time & dropoff time (this should break ties into which driver gets the current order)
+#TODO: later on, add reliability correlating with reputation score
+
+#TODO: more flexible rate based on duration (meet a certain wage)
