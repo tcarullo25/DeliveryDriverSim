@@ -1,9 +1,8 @@
-#TODO: make customers involved as well
 class Order:
-    def __init__(self, id, start, dest, duration, timestep, price):
+    def __init__(self, id, pickup, dropoff, duration, timestep, price):
         self.id = id
-        self.loc = start
-        self.dest = dest
+        self.pickup = pickup
+        self.dropoff = dropoff
         self.duration = duration
         self.timestep = timestep
         self.price = price

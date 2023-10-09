@@ -3,15 +3,15 @@ from ordersAndDrivers import *
 from tests import *
 from visualizations import *
 
-def getOrderDuration(map, currLoc, orderLoc, orderDest):
+def getOrderDuration(map, currLoc, orderPickup, orderDropOff):
     currToOrderSP = nx.shortest_path(map.G, 
-                    source=currLoc, target=orderLoc, weight = 'weight')
+                    source=currLoc, target=orderPickup, weight = 'weight')
     orderToDestSP = nx.shortest_path(map.G, 
-                    source=orderLoc, target=orderDest, weight = 'weight')
+                    source=orderPickup, target=orderDropOff, weight = 'weight')
     totalTime = 0
     currLocToOrderDuration = 0
 
-    # currLoc -> orderLoc duration
+    # currLoc -> orderPickup duration
     for i in range(1, len(currToOrderSP)):
         currNode, prevNode = currToOrderSP[i], currToOrderSP[i-1]
         duration = map.adjMatrix[currNode][prevNode]
@@ -19,7 +19,7 @@ def getOrderDuration(map, currLoc, orderLoc, orderDest):
 
     currLocToOrderDuration = totalTime
 
-    # orderLoc -> orderDest duration
+    # orderPickup -> orderDropOff duration
     for i in range(1, len(orderToDestSP)):
         currNode, prevNode = orderToDestSP[i], orderToDestSP[i-1]
         duration = map.adjMatrix[currNode][prevNode]
@@ -31,7 +31,7 @@ def getClosestDriver(map, drivers, currOrder):
     bestDur = None
     bestDriver = None
     for driver in drivers:
-        currLocToOrderDuration, totalTime = getOrderDuration(map, driver.currLoc, currOrder.loc, currOrder.dest)
+        currLocToOrderDuration, totalTime = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
         # only compare duration from curr loc to order location, not total time
         if bestDur == None or currLocToOrderDuration < bestDur[0]:
             bestDur = currLocToOrderDuration, totalTime
@@ -78,7 +78,7 @@ def initSim(map, orderQueue, drivers, totalMins):
                     if driver.order.duration <= 0:
                         ordersCompleted += 1
                         finishedOrders.append(driver.order)
-                        driver.currLoc = driver.order.dest
+                        driver.currLoc = driver.order.dropoff
                         driver.earnings += driver.order.price
                         driver.totalOrders += 1
                         driver.totalOrderTime += driver.currOrderTime
@@ -111,5 +111,5 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 7
+testNum = 1
 chooseLayout(graphType, testNum)
