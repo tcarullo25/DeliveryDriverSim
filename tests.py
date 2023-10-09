@@ -1,7 +1,7 @@
 from graphs import *
 from ordersAndDrivers import *
+from collections import deque
 import random
-
 
 def maxItemLength(a):
     maxLen = 0
@@ -33,34 +33,37 @@ def format2dList(a):
     lines.append(']')
     return '\n'.join(lines)
 
-def determineQuadrant(nodeIndex, n, m):
-    row = nodeIndex // m
-    col = nodeIndex % m
-    # in top half
-    if row < n // 2:
-        return 'top-left' if col < m // 2 else 'top-right'
-    # in bottom half
-    else:
-        return 'bottom-left' if col < m // 2 else 'bottom-right'
-
-def genDestFromSameQuadrant(nodeIndex, n, m):
-    quadrant = determineQuadrant(nodeIndex, n, m)
-    if quadrant == 'top-left':
-        row = random.randint(0, n // 2 - 1)
-        col = random.randint(0, m // 2 - 1)
-    elif quadrant == 'top-right':
-        row = random.randint(0, n // 2 - 1)
-        col = random.randint(m // 2, m - 1)
-    elif quadrant == 'bottom-left':
-        row = random.randint(n // 2, n - 1)
-        col = random.randint(0, m // 2 - 1)
-    else:
-        row = random.randint(n // 2, n - 1)
-        col = random.randint(m // 2, m - 1)
+def genDropoff(randomMap, pickup, dropoffThreshold):
+    availableDropoffs = []
     
-    return row * m + col
+    # BFS to get all available dropoffs
+    q = deque([(pickup, 0)])
+    visited = set()
 
-def genTest(testNum, n, m, flatRate, numDrivers, durationRange, orderSpawnRate, totalMins):
+    while q:
+        currNode, currDur = q.popleft()
+
+        if currNode not in visited:
+            visited.add(currNode)
+
+        for neighbor, dur in enumerate(randomMap.adjMatrix[currNode]):
+            if dur != None:
+                totalDur = currDur + dur
+                if totalDur <= dropoffThreshold:
+                    if neighbor != pickup:
+                        availableDropoffs.append(neighbor)
+                    q.append((neighbor, totalDur))
+
+    if not availableDropoffs:
+        print(f"ERROR: not enough dropoffs within the threshold {dropoffThreshold}")
+        return
+    
+    # choose a random dropoff within the threshold
+    return random.choice(availableDropoffs)
+
+
+
+def genTest(testNum, n, m, flatRate, numDrivers, dropoffThreshold, durationRange, orderSpawnRate, totalMins):
     randomMap = RandomGridLayout(n, m, n * m, durationRange)
     orderCount = 0
     numNodes = n * m 
@@ -69,8 +72,7 @@ def genTest(testNum, n, m, flatRate, numDrivers, durationRange, orderSpawnRate, 
     for minute in range(totalMins):
         if random.random() < orderSpawnRate:
             pickup = random.randint(0, numNodes-1)
-            # dropoff should be in vicinity of pickup - change to threshold
-            dropoff = genDestFromSameQuadrant(pickup, n, m)
+            dropoff = genDropoff(randomMap, pickup, dropoffThreshold)
             orderQueue.append((orderCount, pickup, dropoff, minute))
             orderCount += 1
     testFunction = \
@@ -105,7 +107,7 @@ def test{testNum}():
         return map, orderQueue, totalMins, drivers'''
     return testFunction
 
-#print(genTest(7, 5, 5, 7, 10, (3, 10), .4, 360))
+#print(genTest(7, 5, 5, 7, 10, 7, (3, 10), .4, 360))
 
 # TEST 1
 # LAYOUT: 5x5 GRID
