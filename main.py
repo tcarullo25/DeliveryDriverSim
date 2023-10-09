@@ -46,7 +46,7 @@ def getAvailableDrivers(drivers):
     return availableDrivers
 
 def initSim(map, orderQueue, drivers, totalMins):
-    # KEEP TRACK OF ORDER INFORMATION FOR DATA VISUALIZATIONS
+    # keep track of order info for data visualizations
     ordersCompleted = 0
     delayedOrders = 0
     finishedOrders = []
@@ -59,8 +59,9 @@ def initSim(map, orderQueue, drivers, totalMins):
             # can only assign order if there is an open driver
             if availableDrivers:
                 currOrder = orderQueue.pop(0)
-                closestDriver, (_, totalDuration) = getClosestDriver(map, availableDrivers, currOrder)
+                closestDriver, (currLocToOrderPickup, totalDuration) = getClosestDriver(map, availableDrivers, currOrder)
                 currOrder.duration = totalDuration
+                currOrder.driverToPickupDur = currLocToOrderPickup
                 closestDriver.addOrder(currOrder)
             else:
                 # if not already delayed
@@ -74,6 +75,9 @@ def initSim(map, orderQueue, drivers, totalMins):
                     # increase driver's curr order time
                     driver.order.duration -= 1
                     driver.currOrderTime += 1
+                    # have not arrived at restaurant yet
+                    if driver.currOrderTime < driver.order.driverToPickupDur:
+                        driver.nonproductiveTime += 1
                     # check if completed order and if so reflect driver's status
                     if driver.order.duration <= 0:
                         ordersCompleted += 1
@@ -86,8 +90,9 @@ def initSim(map, orderQueue, drivers, totalMins):
                         driver.currOrderTime = 0
                         driver.order = None
                 else:
-                    # add non productive time which is idle time + time from driver loc to order pickup
                     driver.idleTime += 1
+                    driver.nonproductiveTime += 1
+
     return drivers, (ordersCompleted, delayedOrders, finishedOrders)
 
 def displayResults(drivers, orderInfo, totalMins):
@@ -111,5 +116,5 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 1
+testNum = 7
 chooseLayout(graphType, testNum)

@@ -9,6 +9,7 @@ def displayVisualizations(drivers, orderInfo, avgRate):
     plotOrdersPerDriver(drivers)
     plotDeliveryDurations(drivers)
     plotIdleTimes(drivers)
+    plotNonproductiveTime(drivers)
     plotDelayedOrders(ordersCompleted, delayedOrders)
     allOrders = [driver.order for driver in drivers if driver.order] + finishedOrders
     plotOrderDelayDurations(allOrders)
@@ -77,6 +78,18 @@ def plotIdleTimes(drivers):
     plt.title('Idle Times for Each Driver')
     plt.xlabel('Driver ID')
     plt.ylabel('Idle Time (minutes)')
+    plt.xticks(driverIDs)  # To ensure every driver ID is shown on the x-axis
+    plt.grid(axis='y', linestyle='--', linewidth=0.5)
+    plt.tight_layout()
+    plt.show()
+def plotNonproductiveTime(drivers):
+    nonproductiveTimes = [driver.nonproductiveTime for driver in drivers]
+    driverIDs = [driver.id for driver in drivers]
+
+    plt.bar(driverIDs, nonproductiveTimes, color='blue', alpha=0.7)
+    plt.title('Non-Productive Times for Each Driver')
+    plt.xlabel('Driver ID')
+    plt.ylabel('Non-Productive (minutes)')
     plt.xticks(driverIDs)  # To ensure every driver ID is shown on the x-axis
     plt.grid(axis='y', linestyle='--', linewidth=0.5)
     plt.tight_layout()

@@ -4,6 +4,7 @@ class Order:
         self.pickup = pickup
         self.dropoff = dropoff
         self.duration = duration
+        self.driverToPickupDur = 0 # will update when assigned to driver
         self.timestep = timestep
         self.price = price
         self.delayedLength = 0
@@ -17,7 +18,8 @@ class Driver:
         self.totalOrders = 0
         self.totalOrderTime  = 0
         self.currOrderTime = 0
-        self.idleTime = 0
+        self.idleTime = 0 # when the driver has no order assigned
+        self.nonproductiveTime = 0 # idle time + time from driver loc to order pickup
         self.orderTimes = []
     
     def addOrder(self, order):

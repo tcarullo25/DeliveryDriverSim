@@ -1,5 +1,5 @@
-1. #TODO: do threshold instead of quadrant
-2. #TODO: add non productive time which is idle time + time from driver loc to order pickup
+1. DONE: do threshold instead of quadrant
+2. DONE: add non productive time which is idle time + time from driver loc to order pickup
 3. #TODO: pickup time - the timestep the restaurant will have it ready 
           dropoff time - delivery by time (maybe measured by reputation of restaurant?)
 4. #TODO: more flexible rate based on duration (meet a certain wage)
