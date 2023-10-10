@@ -1,13 +1,13 @@
 class Order:
-    def __init__(self, id, pickup, dropoff, duration, timestep, price):
+    def __init__(self, id, pickup, dropoff, timestep, price):
         self.id = id
         self.pickup = pickup
         self.dropoff = dropoff
-        self.duration = duration
-        self.driverToPickupDur = 0 # will update when assigned to driver
         self.timestep = timestep
         self.price = price
+        self.duration = 0
         self.delayedLength = 0
+        self.driverToPickupDur = 0 # will update when assigned to driver
 
 class Driver:
     def __init__(self, id, startLoc):

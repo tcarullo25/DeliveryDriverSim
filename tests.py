@@ -97,10 +97,9 @@ def test{testNum}():
         {drivers}
         orderQueue = []
         drivers = []
-        orderDuration = 0 # will update when assigned to driver
         # INIT ORDERS
         for id, pickup, dropoff, timestep in orderInfo:
-            orderQueue.append(Order(id, pickup, dropoff, orderDuration, timestep, basePay))
+            orderQueue.append(Order(id, pickup, dropoff, timestep, basePay))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))
@@ -181,10 +180,9 @@ def test1():
 
     orderQueue = []
     drivers = []
-    orderDuration = 0 # will update when assigned to driver
     # INIT ORDERS
     for id, start, dropoff, timestep in orderInfo:
-        orderQueue.append(Order(id, start, dropoff, orderDuration, timestep, flatRate))
+        orderQueue.append(Order(id, start, dropoff, timestep, flatRate))
     # INIT DRIVERS
     for id, start in driverInfo:
         drivers.append(Driver(id, start))
@@ -272,10 +270,9 @@ def test2():
     map = GridLayout(n, m, n*m, adjMatrix)
     orderQueue = []
     drivers = []
-    orderDuration = 0 # will update when assigned to driver
     # INIT ORDERS
-    for id, start, dropoff, orderDuration, timestep, flatRate in orderInfo:
-        orderQueue.append(Order(id, start, dropoff, orderDuration, timestep, flatRate))
+    for id, start, dropoff, timestep, flatRate in orderInfo:
+        orderQueue.append(Order(id, start, dropoff, timestep, flatRate))
     # INIT DRIVERS
     for id, start in driverInfo:
         drivers.append(Driver(id, start))
@@ -366,10 +363,9 @@ def test3():
         [(0, 34), (1, 1), (2, 28), (3, 41), (4, 40), (5, 18), (6, 2), (7, 43), (8, 46), (9, 16)]
         orderQueue = []
         drivers = []
-        orderDuration = 0 # will update when assigned to driver
         # INIT ORDERS
-        for id, start, dropoff, orderDuration, timestep, flatRate in orderInfo:
-            orderQueue.append(Order(id, start, dropoff, orderDuration, timestep, flatRate))
+        for id, start, dropoff, timestep, flatRate in orderInfo:
+            orderQueue.append(Order(id, start, dropoff, timestep, flatRate))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))
@@ -405,10 +401,9 @@ def test4():
         [(0, 7), (1, 7), (2, 7), (3, 6)]
         orderQueue = []
         drivers = []
-        orderDuration = 0 # will update when assigned to driver
         # INIT ORDERS
         for id, start, dropoff, timestep, flatRate in orderInfo:
-            orderQueue.append(Order(id, start, dropoff, orderDuration, timestep, flatRate))
+            orderQueue.append(Order(id, start, dropoff, timestep, flatRate))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))
@@ -647,10 +642,9 @@ None, None, None, None, None, None, None, None, None, None, None, None, None, No
         [(0, 84), (1, 37), (2, 99), (3, 98), (4, 9), (5, 17), (6, 71), (7, 35), (8, 58), (9, 8), (10, 81), (11, 49), (12, 21), (13, 90), (14, 25)]
         orderQueue = []
         drivers = []
-        orderDuration = 0 # will update when assigned to driver
         # INIT ORDERS
         for id, start, dropoff, timestep in orderInfo:
-            orderQueue.append(Order(id, start, dropoff, orderDuration, timestep, flatRate))
+            orderQueue.append(Order(id, start, dropoff, timestep, flatRate))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))
@@ -894,10 +888,9 @@ None, None, None, None, None, None, None, None, None, None, None, None, None, No
 82)]
         orderQueue = []
         drivers = []
-        orderDuration = 0 # will update when assigned to driver
         # INIT ORDERS
         for id, start, dropoff, timestep in orderInfo:
-            orderQueue.append(Order(id, start, dropoff, orderDuration, timestep, flatRate))
+            orderQueue.append(Order(id, start, dropoff, timestep, flatRate))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))
@@ -952,10 +945,9 @@ def test7():
         [(0, 2), (1, 13), (2, 6), (3, 17), (4, 15), (5, 24), (6, 19), (7, 11), (8, 16), (9, 8)]
         orderQueue = []
         drivers = []
-        orderDuration = 0 # will update when assigned to driver
         # INIT ORDERS
         for id, start, dropoff, timestep in orderInfo:
-            orderQueue.append(Order(id, start, dropoff, orderDuration, timestep, flatRate))
+            orderQueue.append(Order(id, start, dropoff, timestep, flatRate))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))
@@ -1025,10 +1017,9 @@ def test8():
         [(0, 34), (1, 14), (2, 19), (3, 4), (4, 1), (5, 3), (6, 25), (7, 5), (8, 5), (9, 5)]
         orderQueue = []
         drivers = []
-        orderDuration = 0 # will update when assigned to driver
         # INIT ORDERS
         for id, pickup, dropoff, timestep in orderInfo:
-            orderQueue.append(Order(id, pickup, dropoff, orderDuration, timestep, basePay))
+            orderQueue.append(Order(id, pickup, dropoff, timestep, basePay))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))
