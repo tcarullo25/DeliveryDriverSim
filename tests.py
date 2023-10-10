@@ -62,8 +62,7 @@ def genDropoff(randomMap, pickup, dropoffThreshold):
     return random.choice(availableDropoffs)
 
 
-
-def genTest(testNum, n, m, flatRate, numDrivers, dropoffThreshold, durationRange, orderSpawnRate, totalMins):
+def genTest(testNum, n, m, basePay, numDrivers, durationRange, orderSpawnRate, totalMins, dropoffThreshold=12, pickupWiggleRoom=3):
     randomMap = RandomGridLayout(n, m, n * m, durationRange)
     orderCount = 0
     numNodes = n * m 
@@ -73,6 +72,8 @@ def genTest(testNum, n, m, flatRate, numDrivers, dropoffThreshold, durationRange
         if random.random() < orderSpawnRate:
             pickup = random.randint(0, numNodes-1)
             dropoff = genDropoff(randomMap, pickup, dropoffThreshold)
+            if dropoff == None: # could not meet threshold, exit
+                 return
             orderQueue.append((orderCount, pickup, dropoff, minute))
             orderCount += 1
     testFunction = \
@@ -80,12 +81,12 @@ def genTest(testNum, n, m, flatRate, numDrivers, dropoffThreshold, durationRange
 # TEST {testNum}
 # LAYOUT: {n}x{m} GRID
 # {numDrivers} DRIVERS, {totalMins//60} HOUR PERIOD
-# FLAT RATE ${flatRate}/order
+# FLAT RATE ${basePay}/order
 # EDGE DURATIONS RANGE {durationRange}
 def test{testNum}():
         n = {n}
         m = {m}
-        flatRate = {flatRate}
+        basePay = {basePay} # total price will be calculated later when assigned to driver
         totalMins = {totalMins}
         adjMatrix = \\
         {format2dList(randomMap.adjMatrix)}
@@ -99,7 +100,7 @@ def test{testNum}():
         orderDuration = 0 # will update when assigned to driver
         # INIT ORDERS
         for id, pickup, dropoff, timestep in orderInfo:
-            orderQueue.append(Order(id, pickup, dropoff, orderDuration, timestep, flatRate))
+            orderQueue.append(Order(id, pickup, dropoff, orderDuration, timestep, basePay))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))
@@ -107,7 +108,7 @@ def test{testNum}():
         return map, orderQueue, totalMins, drivers'''
     return testFunction
 
-#print(genTest(7, 5, 5, 7, 10, 7, (3, 10), .4, 360))
+#print(genTest(8, 6, 6, 3, 10, (3, 10), .4, 360))
 
 # TEST 1
 # LAYOUT: 5x5 GRID
@@ -955,6 +956,79 @@ def test7():
         # INIT ORDERS
         for id, start, dropoff, timestep in orderInfo:
             orderQueue.append(Order(id, start, dropoff, orderDuration, timestep, flatRate))
+        # INIT DRIVERS
+        for id, start in driverInfo:
+            drivers.append(Driver(id, start))
+
+        return map, orderQueue, totalMins, drivers
+
+#########################################################################
+################## TESTS WITH ORDER PROXIMITY & BASE PAY ################
+#########################################################################
+
+# TEST 8
+# LAYOUT: 6x6 GRID
+# 10 DRIVERS, 6 HOUR PERIOD
+# FLAT RATE $3/order
+# EDGE DURATIONS RANGE (3, 10)
+def test8():
+        n = 6
+        m = 6
+        basePay = 3 # total price will be calculated later when assigned to driver
+        totalMins = 360
+        adjMatrix = \
+        [
+ [ None,    6, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [    6, None,    4, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None,    4, None,    4, None, None, None, None,    4, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None,    4, None,    4, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None,    4, None,    3, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None,    3, None, None, None, None, None, None,    4, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [    5, None, None, None, None, None, None,    7, None, None, None, None,    4, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None,    7, None, None, None, None,    7, None,    5, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None,    4, None, None, None, None,    5, None,    8, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None,   10, None, None, None, None,    8, None,    4, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None,   10, None, None, None, None,    4, None,    5, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None,    4, None, None, None, None,    5, None, None, None, None, None, None,    4, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None,    4, None, None, None, None, None, None,    3, None, None, None, None,    3, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None,    7, None, None, None, None,    3, None,    7, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None,    8, None, None, None, None,    7, None,    7, None, None, None, None,    3, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    7, None,    9, None, None, None, None,    4, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    9, None,    6, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None,    4, None, None, None, None,    6, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None,    3, None, None, None, None, None, None,   10, None, None, None, None,    4, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None,   10, None,   10, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None,    3, None, None, None, None,   10, None,   10, None, None, None, None,    3, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    4, None, None, None, None,   10, None,    6, None, None, None, None,    8, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    6, None,   10, None, None, None, None,    6, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None,   10, None, None, None, None, None, None,    8, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    4, None, None, None, None, None, None,   10, None, None, None, None,    3, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None,   10, None,    9, None, None, None, None,    7, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    3, None, None, None, None,    9, None,    4, None, None, None, None,   10, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    4, None,    3, None, None, None, None,    4, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None,    3, None,    3, None, None, None, None,    8, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    3, None, None, None, None, None, None,    6 ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    3, None, None, None, None, None, None,   10, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None,   10, None,    4, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None,    4, None,    3, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    4, None, None, None, None,    3, None,    7, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None,    7, None,    4 ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None,    4, None ]
+]
+        map = GridLayout(n, m, n * m, adjMatrix)
+        orderInfo = \
+        [(0, 33, 31, 2), (1, 16, 9, 6), (2, 34, 27, 7), (3, 31, 32, 17), (4, 21, 22, 19), (5, 5, 3, 20), (6, 4, 3, 21), (7, 22, 29, 27), (8, 35, 29, 32), (9, 22, 27, 35), (10, 29, 23, 40), (11, 25, 24, 41), (12, 11, 17, 45), (13, 33, 21, 46), (14, 14, 27, 49), (15, 32, 33, 50), (16, 14, 27, 51), (17, 3, 11, 52), (18, 22, 23, 56), (19, 3, 2, 59), (20, 23, 28, 60), (21, 20, 26, 63), (22, 18, 12, 68), (23, 0, 18, 69), (24, 32, 28, 70), (25, 35, 34, 75), (26, 21, 15, 77), (27, 29, 34, 81), (28, 7, 8, 82), (29, 10, 4, 83), (30, 25, 19, 84), (31, 12, 6, 91), (32, 33, 27, 92), (33, 2, 14, 95), (34, 17, 11, 100), (35, 6, 12, 106), (36, 4, 17, 107), (37, 19, 13, 109), (38, 3, 5, 114), (39, 31, 30, 117), (40, 7, 8, 123), (41, 32, 33, 124), (42, 17, 10, 126), (43, 23, 28, 128), (44, 20, 8, 132), (45, 21, 20, 134), (46, 
+4, 3, 136), (47, 18, 30, 139), (48, 9, 3, 140), (49, 33, 28, 141), (50, 3, 8, 146), (51, 7, 8, 147), (52, 24, 18, 148), (53, 8, 3, 151), (54, 14, 20, 152), (55, 6, 
+12, 153), (56, 24, 30, 154), (57, 31, 32, 156), (58, 3, 9, 158), (59, 17, 11, 161), (60, 15, 10, 163), (61, 17, 11, 171), (62, 32, 28, 172), (63, 23, 11, 173), (64, 1, 8, 175), (65, 33, 32, 176), (66, 21, 27, 177), (67, 20, 26, 181), (68, 26, 27, 186), (69, 5, 2, 191), (70, 7, 6, 192), (71, 1, 2, 194), (72, 7, 6, 196), (73, 8, 14, 197), (74, 33, 20, 198), (75, 21, 20, 202), (76, 26, 27, 205), (77, 0, 18, 206), (78, 18, 12, 209), (79, 35, 29, 211), (80, 31, 25, 212), (81, 10, 9, 216), (82, 29, 35, 217), (83, 34, 29, 221), (84, 32, 31, 226), (85, 33, 27, 228), (86, 5, 3, 229), (87, 3, 2, 231), (88, 17, 11, 232), (89, 19, 20, 241), (90, 30, 24, 244), 
+(91, 32, 31, 248), (92, 3, 5, 252), (93, 29, 27, 256), (94, 12, 6, 258), (95, 34, 27, 260), (96, 19, 18, 262), (97, 29, 27, 263), (98, 12, 7, 264), (99, 20, 27, 267), (100, 6, 0, 268), (101, 35, 29, 269), (102, 31, 32, 271), (103, 2, 3, 272), (104, 2, 3, 274), (105, 10, 17, 275), (106, 35, 33, 277), (107, 11, 4, 278), (108, 29, 28, 281), (109, 2, 9, 283), (110, 30, 18, 286), (111, 14, 12, 288), (112, 30, 24, 292), (113, 31, 32, 295), (114, 31, 30, 299), (115, 12, 6, 301), (116, 13, 12, 303), (117, 14, 27, 304), (118, 12, 14, 306), (119, 7, 2, 310), (120, 27, 32, 311), (121, 31, 32, 313), (122, 33, 27, 314), (123, 32, 31, 315), (124, 27, 26, 321), (125, 9, 21, 322), (126, 24, 30, 329), (127, 14, 27, 330), (128, 35, 29, 332), (129, 32, 27, 333), (130, 6, 13, 337), (131, 11, 10, 338), (132, 22, 23, 342), (133, 14, 26, 343), (134, 31, 30, 344), (135, 18, 24, 351), (136, 27, 26, 356), (137, 3, 2, 358)]
+        driverInfo = \
+        [(0, 34), (1, 14), (2, 19), (3, 4), (4, 1), (5, 3), (6, 25), (7, 5), (8, 5), (9, 5)]
+        orderQueue = []
+        drivers = []
+        orderDuration = 0 # will update when assigned to driver
+        # INIT ORDERS
+        for id, pickup, dropoff, timestep in orderInfo:
+            orderQueue.append(Order(id, pickup, dropoff, orderDuration, timestep, basePay))
         # INIT DRIVERS
         for id, start in driverInfo:
             drivers.append(Driver(id, start))

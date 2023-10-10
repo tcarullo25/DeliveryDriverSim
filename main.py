@@ -50,6 +50,8 @@ def initSim(map, orderQueue, drivers, totalMins):
     ordersCompleted = 0
     delayedOrders = 0
     finishedOrders = []
+    # flat rate added to base pay for every order
+    hourlyRate = 14
 
     for minute in range(totalMins):
         # peek at next order in queue to see if it's ready to release
@@ -60,6 +62,10 @@ def initSim(map, orderQueue, drivers, totalMins):
             if availableDrivers:
                 currOrder = orderQueue.pop(0)
                 closestDriver, (currLocToOrderPickup, totalDuration) = getClosestDriver(map, availableDrivers, currOrder)
+                #orderPickupToDropoffDuration = totalDuration - currLocToOrderPickup
+                #NOTE: using total order duration b/c orderPickUpToDropoff is too small
+                rate = (totalDuration/60) * hourlyRate
+                currOrder.price += rate
                 currOrder.duration = totalDuration
                 currOrder.driverToPickupDur = currLocToOrderPickup
                 closestDriver.addOrder(currOrder)
@@ -71,7 +77,7 @@ def initSim(map, orderQueue, drivers, totalMins):
 
         for driver in drivers:
                 if driver.order != None:
-                    # decrease order duration by one timestep,
+                    # decrease order duration by one timestep
                     # increase driver's curr order time
                     driver.order.duration -= 1
                     driver.currOrderTime += 1
@@ -116,5 +122,5 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 7
+testNum = 8
 chooseLayout(graphType, testNum)
