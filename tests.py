@@ -46,13 +46,13 @@ def genDropoff(randomMap, pickup, dropoffThreshold):
         if currNode not in visited:
             visited.add(currNode)
 
-        for neighbor, dur in enumerate(randomMap.adjMatrix[currNode]):
-            if dur != None:
-                totalDur = currDur + dur
-                if totalDur <= dropoffThreshold:
-                    if neighbor != pickup:
-                        availableDropoffs.append(neighbor)
-                    q.append((neighbor, totalDur))
+            for neighbor, dur in enumerate(randomMap.adjMatrix[currNode]):
+                if dur != None:
+                    totalDur = currDur + dur
+                    if totalDur <= dropoffThreshold:
+                        if neighbor != pickup:
+                            availableDropoffs.append(neighbor)
+                        q.append((neighbor, totalDur))
 
     if not availableDropoffs:
         print(f"ERROR: not enough dropoffs within the threshold {dropoffThreshold}")
