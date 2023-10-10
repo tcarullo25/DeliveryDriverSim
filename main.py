@@ -106,6 +106,7 @@ def displayResults(drivers, orderInfo, totalMins):
     res = f'There was a total of {ordersCompleted} orders completed across all drivers.\nThe earnings for each driver are as follows:\n'
     sumOfRates = 0
     for driver in drivers:
+        driver.earnings = round(driver.earnings, 2)
         driverRate = driver.earnings / (totalMins/60)
         sumOfRates += driverRate
         res += f'• Driver {driver.id} received ${driver.earnings}, completed {driver.totalOrders} orders and it took them {driver.totalOrderTime} timesteps.\n'
