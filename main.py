@@ -97,7 +97,7 @@ def initSim(map, orderQueue, drivers, totalMins):
                         if driver.order.pickupTime < minute:
                             driver.order.lateToPickupDuration += 1
                     # have not delivered order yet
-                    if not driver.order.delivered:
+                    if driver.order.pickedUp and not driver.order.delivered:
                         driver.order.pickupToDeliverDur -= 1
                         if driver.order.pickupToDeliverDur <= 0:
                             driver.order.delivered = True
