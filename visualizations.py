@@ -113,7 +113,7 @@ def plotOrderDelayDurations(orders):
     plt.xlabel('Delay Duration (in timesteps)')
     plt.xticks(np.arange(min(delays), max(delays) + 1, 1.0))
     plt.ylabel('Number of Orders')
-    plt.title('Distribution of Order Delay Durations')
+    plt.title('Distribution of Order Delay in Assignment Durations')
     plt.show()
 
 def plotLatePickupsDeliveries(drivers):
