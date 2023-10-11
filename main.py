@@ -45,6 +45,7 @@ def getAvailableDrivers(drivers):
             availableDrivers.append(driver)
     return availableDrivers
 
+# NOT CURRENTLY USED
 def checkRemainingOrders(orders, minute):
     for order in orders:
         if not order.pickedUp and order.pickupTime < minute:
