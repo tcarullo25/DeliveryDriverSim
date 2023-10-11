@@ -149,7 +149,7 @@ def plotDriversLateOrders(drivers):
     plt.bar(r2, totalLateDeliverDurs, color='r', width=bar_width, edgecolor='grey', label='Total Late to Deliver Duration')
 
     plt.xlabel('Drivers', fontweight='bold', fontsize=15)
-    plt.ylabel('Total Time (units)', fontweight='bold', fontsize=15)
+    plt.ylabel('Total Time', fontweight='bold', fontsize=15)
     plt.xticks([r + bar_width for r in range(len(driverIds))], driverIds)
     plt.legend()
 
