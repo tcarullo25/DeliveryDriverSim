@@ -124,7 +124,7 @@ def initSim(map, orderQueue, drivers, totalMins):
                     driver.nonproductiveTime += 1
         # checks pickup/delivery time for orders that are not yet assigned to drivers
         #NOTE: orders may already be very late before a driver is assigned, could be unfair?
-        checkRemainingOrders(orderQueue, minute)
+        #checkRemainingOrders(orderQueue, minute)
 
     return drivers, (ordersCompleted, delayedOrders, finishedOrders)
 
@@ -150,5 +150,5 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 3
+testNum = 4
 chooseLayout(graphType, testNum)

@@ -102,7 +102,7 @@ def plotDelayedOrders(totalOrders, delayedOrders):
     labels = ['Fulfilled Immediately', 'Delayed']
     sizes = [fulfilledImmediately, delayedOrders]
     plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=['green', 'red'])
-    plt.title('Proportion of Delayed Orders')
+    plt.title('Proportion of Delayed in Asssignment Orders')
     plt.tight_layout()
     plt.show()
 
@@ -140,16 +140,13 @@ def plotDriversLateOrders(drivers):
     driverIds = [driver.id for driver in drivers]
     totalLatePickupDurs = [sum(order.lateToPickupDuration for order in driver.latePickupOrders) for driver in drivers]
     totalLateDeliverDurs = [sum(order.lateToDeliverDuration for order in driver.lateDeliverOrders) for driver in drivers]
-    totalDelayDurs = [sum(order.delayedInAssignmentDuration for order in driver.latePickupOrders + driver.lateDeliverOrders) for driver in drivers]
 
     bar_width = 0.25
     r1 = np.arange(len(driverIds))
     r2 = [x + bar_width for x in r1]
-    r3 = [x + bar_width for x in r2]
 
     plt.bar(r1, totalLatePickupDurs, color='b', width=bar_width, edgecolor='grey', label='Total Late to Pickup Duration')
     plt.bar(r2, totalLateDeliverDurs, color='r', width=bar_width, edgecolor='grey', label='Total Late to Deliver Duration')
-    plt.bar(r3, totalDelayDurs, color='g', width=bar_width, edgecolor='grey', label='Total Delayed in Assignment Duration')
 
     plt.xlabel('Drivers', fontweight='bold', fontsize=15)
     plt.ylabel('Total Time (units)', fontweight='bold', fontsize=15)
