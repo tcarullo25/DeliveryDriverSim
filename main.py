@@ -45,6 +45,13 @@ def getAvailableDrivers(drivers):
             availableDrivers.append(driver)
     return availableDrivers
 
+def checkRemainingOrders(orders, minute):
+    for order in orders:
+        if not order.pickedUp and order.pickupTime < minute:
+            order.lateToPickupDuration += 1
+        if not order.delivered and order.deliverTime < minute:
+            order.lateToDeliverDuration += 1
+
 def initSim(map, orderQueue, drivers, totalMins):
     # keep track of order info for data visualizations
     ordersCompleted = 0
@@ -54,40 +61,57 @@ def initSim(map, orderQueue, drivers, totalMins):
     hourlyRate = 14
 
     for minute in range(totalMins):
+
+        # ORDER ASSIGNMENT #
         # peek at next order in queue to see if it's ready to release
-        if orderQueue and orderQueue[0].timestep <= minute:
+        if orderQueue and orderQueue[0].releaseTime <= minute:
             currOrder = orderQueue[0]
             availableDrivers = getAvailableDrivers(drivers)
             # can only assign order if there is an open driver
             if availableDrivers:
                 currOrder = orderQueue.pop(0)
                 closestDriver, (currLocToOrderPickup, totalDuration) = getClosestDriver(map, availableDrivers, currOrder)
-                #orderPickupToDropoffDuration = totalDuration - currLocToOrderPickup
                 #NOTE: using total order duration b/c orderPickUpToDropoff is too small
                 rate = (totalDuration/60) * hourlyRate
                 currOrder.price += rate
-                currOrder.duration = totalDuration
                 currOrder.driverToPickupDur = currLocToOrderPickup
+                currOrder.pickupToDeliverDur = totalDuration - currLocToOrderPickup
                 closestDriver.addOrder(currOrder)
             else:
                 # if not already delayed
-                if orderQueue[0].delayedLength == 0:
+                if orderQueue[0].delayedInAssignmentDuration == 0:
                     delayedOrders += 1
-                orderQueue[0].delayedLength += 1
-
+                orderQueue[0].delayedInAssignmentDuration += 1
+        # DRIVER LOGIC #
         for driver in drivers:
                 if driver.order != None:
-                    # decrease order duration by one timestep
-                    # increase driver's curr order time
-                    driver.order.duration -= 1
                     driver.currOrderTime += 1
+
                     # have not arrived at restaurant yet
-                    if driver.currOrderTime < driver.order.driverToPickupDur:
+                    if not driver.order.pickedUp:
                         driver.nonproductiveTime += 1
+                        driver.order.driverToPickupDur -= 1
+                        if driver.order.driverToPickupDur <= 0:
+                            driver.order.pickedUp = True
+                        # pickup time passed - increase late duration
+                        if driver.order.pickupTime < minute:
+                            driver.order.lateToPickupDuration += 1
+                    # have not delivered order yet
+                    if not driver.order.delivered:
+                        driver.order.pickupToDeliverDur -= 1
+                        if driver.order.pickupToDeliverDur <= 0:
+                            driver.order.delivered = True
+                        # deliver time passed - increase late duration
+                        if driver.order.deliverTime < minute:
+                            driver.order.lateToDeliverDuration += 1
                     # check if completed order and if so reflect driver's status
-                    if driver.order.duration <= 0:
+                    if driver.order.delivered:
                         ordersCompleted += 1
                         finishedOrders.append(driver.order)
+                        if driver.order.lateToPickupDuration:
+                            driver.latePickupOrders.append(driver.order)
+                        if driver.order.lateToDeliverDuration:
+                            driver.lateDeliverOrders.append(driver.order)
                         driver.currLoc = driver.order.dropoff
                         driver.earnings += driver.order.price
                         driver.totalOrders += 1
@@ -98,6 +122,9 @@ def initSim(map, orderQueue, drivers, totalMins):
                 else:
                     driver.idleTime += 1
                     driver.nonproductiveTime += 1
+        # checks pickup/delivery time for orders that are not yet assigned to drivers
+        #NOTE: orders may already be very late before a driver is assigned, could be unfair?
+        checkRemainingOrders(orderQueue, minute)
 
     return drivers, (ordersCompleted, delayedOrders, finishedOrders)
 
@@ -123,5 +150,5 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 8
+testNum = 3
 chooseLayout(graphType, testNum)

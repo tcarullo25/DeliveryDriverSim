@@ -1,11 +1,12 @@
 1. DONE: do threshold instead of quadrant
 2. DONE: add non productive time which is idle time + time from driver loc to order pickup
-3. #TODO: pickup time - the timestep the restaurant will have it ready 
-          dropoff time - delivery by time (maybe measured by reputation of restaurant?)
+3. DONE: pickup time - the timestep the restaurant will have it ready PREDETERMINED
+          dropoff time - delivery by time PREDETERMINED (maybe measured by reputation of restaurant?)
 4. DONE: more flexible rate based on duration (meet a certain wage)
 5. #TODO: reputation score for drivers based off meeting the pickup time & dropoff time (this should break ties into which driver gets the current order)
            add reliability correlating with reputation score (random seed)
-6. #TODO: adding order while have a current order
+6. #TODO: make tests look nicer
+7. #TODO: adding order while have a current order
 
 
 # not currently reflecting driver distance as they proceed in route
@@ -16,3 +17,5 @@
 
 # order objects should have the price of the actual order, then tip should be calculated from that and added to base pay
 # flat fee should be a separate parameter (like a base pay)
+
+

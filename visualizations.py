@@ -4,6 +4,8 @@ import numpy as np
 
 def displayVisualizations(drivers, orderInfo, avgRate):
     ordersCompleted, delayedOrders, finishedOrders = orderInfo
+    plotLatePickupsDeliveries(drivers)
+    plotDriversLateOrders(drivers)
     plotDriverEarnings(drivers, avgRate)
     plotOrderTimes(drivers)
     plotOrdersPerDriver(drivers)
@@ -105,7 +107,7 @@ def plotDelayedOrders(totalOrders, delayedOrders):
     plt.show()
 
 def plotOrderDelayDurations(orders):
-    delays = [order.delayedLength for order in orders if order.delayedLength > 0]  
+    delays = [order.delayedInAssignmentDuration for order in orders if order.delayedInAssignmentDuration > 0]  
     plt.hist(delays, bins=range(1, max(delays) + 2), align='left', rwidth=0.8, 
                                             color='skyblue', edgecolor='black')
     plt.xlabel('Delay Duration (in timesteps)')
@@ -114,3 +116,45 @@ def plotOrderDelayDurations(orders):
     plt.title('Distribution of Order Delay Durations')
     plt.show()
 
+def plotLatePickupsDeliveries(drivers):
+    driverIds = [driver.id for driver in drivers]
+    latePickups = [100 * len(driver.latePickupOrders)/driver.totalOrders for driver in drivers]
+    lateDeliveries = [100 * len(driver.lateDeliverOrders)/driver.totalOrders for driver in drivers]
+    
+    bar_width = 0.35
+    r1 = np.arange(len(driverIds))
+    r2 = [x + bar_width for x in r1]
+
+    plt.bar(r1, latePickups, color='b', width=bar_width, edgecolor='grey', label='Late Pickups')
+    plt.bar(r2, lateDeliveries, color='r', width=bar_width, edgecolor='grey', label='Late Deliveries')
+    
+    plt.xlabel('Drivers', fontweight='bold', fontsize=15)
+    plt.xticks([r + bar_width for r in range(len(driverIds))], driverIds)
+    plt.ylabel('Number of Orders (%)', fontweight='bold', fontsize=15)
+    plt.legend()
+    
+    plt.title('Late Pickups and Deliveries per Driver')
+    plt.show()
+
+def plotDriversLateOrders(drivers):
+    driverIds = [driver.id for driver in drivers]
+    totalLatePickupDurs = [sum(order.lateToPickupDuration for order in driver.latePickupOrders) for driver in drivers]
+    totalLateDeliverDurs = [sum(order.lateToDeliverDuration for order in driver.lateDeliverOrders) for driver in drivers]
+    totalDelayDurs = [sum(order.delayedInAssignmentDuration for order in driver.latePickupOrders + driver.lateDeliverOrders) for driver in drivers]
+
+    bar_width = 0.25
+    r1 = np.arange(len(driverIds))
+    r2 = [x + bar_width for x in r1]
+    r3 = [x + bar_width for x in r2]
+
+    plt.bar(r1, totalLatePickupDurs, color='b', width=bar_width, edgecolor='grey', label='Total Late to Pickup Duration')
+    plt.bar(r2, totalLateDeliverDurs, color='r', width=bar_width, edgecolor='grey', label='Total Late to Deliver Duration')
+    plt.bar(r3, totalDelayDurs, color='g', width=bar_width, edgecolor='grey', label='Total Delayed in Assignment Duration')
+
+    plt.xlabel('Drivers', fontweight='bold', fontsize=15)
+    plt.ylabel('Total Time (units)', fontweight='bold', fontsize=15)
+    plt.xticks([r + bar_width for r in range(len(driverIds))], driverIds)
+    plt.legend()
+
+    plt.title('Late Order Durations')
+    plt.show()
