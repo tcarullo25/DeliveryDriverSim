@@ -87,6 +87,7 @@ def initSim(map, orderQueue, drivers, totalMins):
         for driver in drivers:
                 if driver.order != None:
                     driver.currOrderTime += 1
+                    #NOTE: could mark late only after a certain amount of time? (e.g. after 10 mins driver will get penalized)
 
                     # have not arrived at restaurant yet
                     if not driver.order.pickedUp:
