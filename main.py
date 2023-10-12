@@ -132,6 +132,7 @@ def initSim(map, orderQueue, drivers, totalMins):
 
 def displayResults(drivers, orderInfo, totalMins):
     ordersCompleted, _, _ = orderInfo
+
     res = f'There was a total of {ordersCompleted} orders completed across all drivers.\nThe earnings for each driver are as follows:\n'
     sumOfRates = 0
     for driver in drivers:
@@ -141,16 +142,73 @@ def displayResults(drivers, orderInfo, totalMins):
         res += f'• Driver {driver.id} received ${driver.earnings}, completed {driver.totalOrders} orders and it took them {driver.totalOrderTime} timesteps.\n'
     avgRate = round(sumOfRates/len(drivers),2)
     res += f'The average wage across all drivers is: ${avgRate}/hr'
-    print(res)
-    displayVisualizations(drivers, orderInfo, avgRate)
+    #print(res)
+    #displayVisualizations(drivers, orderInfo, avgRate)
+    return avgLateness(drivers)
 
-def chooseLayout(graphType, testNum):
+def chooseLayout(graphType, testNum, generatedTest):
     if graphType == 'grid':
+        exec(generatedTest)
         map, orderQueue, totalMins, drivers = eval(f'test{testNum}()')
 
     drivers, orderInfo = initSim(map, orderQueue,  drivers, totalMins)
-    displayResults(drivers, orderInfo, totalMins)
+    avgLateness = displayResults(drivers, orderInfo, totalMins)
+    return avgLateness
+
+def avgLateness(drivers):
+    totalLatePickupTime = sum([order.pickupTime - order.releaseTime for driver in drivers for order in driver.latePickupOrders])
+    totalLateDeliverTime = sum([order.deliverTime - order.pickupTime for driver in drivers for order in driver.lateDeliverOrders])
+    
+    totalOrders = sum([driver.totalOrders for driver in drivers])
+    
+    if totalOrders == 0: # To prevent division by zero
+        return 0
+
+    return (totalLatePickupTime + totalLateDeliverTime) / totalOrders
+import math, random 
+
+def runDynamicAdjustment(numIterations, initialPickupRange, adjustmentFactor, n, m, basePay, numDrivers, durationRange, orderSpawnRate, totalMins, dropoffThreshold=20, deliverTimeWiggleRoom=4):    
+    pickupTimeRange = initialPickupRange
+    bestPickupTimeRange = pickupTimeRange
+    currentLateness = float('inf')
+    bestLateness = currentLateness
+    initialTemperature = 1000
+    coolingRate = 0.995
+
+    for i in range(numIterations):
+        temperature = initialTemperature * (coolingRate ** i)
+
+        # Generate neighboring solutions for both start and end of the pickup range
+        startAdjustment = adjustmentFactor if random.choice([True, False]) else -adjustmentFactor
+        endAdjustment = adjustmentFactor if random.choice([True, False]) else -adjustmentFactor
+        newPickupTimeRange = (pickupTimeRange[0] + startAdjustment, pickupTimeRange[1] + endAdjustment)
+
+        generatedTest = genTest(i+1, n, m, basePay, numDrivers, durationRange, newPickupTimeRange, orderSpawnRate, totalMins, dropoffThreshold, deliverTimeWiggleRoom)
+        newLateness = chooseLayout('grid', i+1, generatedTest)
+
+        if newLateness < bestLateness:
+            bestLateness = newLateness
+            bestPickupTimeRange = newPickupTimeRange
+
+        if newLateness < currentLateness or random.random() < math.exp(-(newLateness - currentLateness) / temperature):
+            currentLateness = newLateness
+            pickupTimeRange = newPickupTimeRange
+        
+        print(f"After Test {i+1}, adjusted pickup time range to: {pickupTimeRange} with average {newLateness}")
+    return bestPickupTimeRange
+print(runDynamicAdjustment(
+    numIterations=50,  # Number of iterations/tests to run
+    n=7,  # Width of the grid layout
+    m=7,  # Height of the grid layout
+    basePay=3,  # Base payment for each order
+    numDrivers=7,  # Number of drivers
+    durationRange=(5, 15),  # Range for the edge durations
+    initialPickupRange=(5, 25),  # Initial range for pickup times
+    orderSpawnRate=0.4, # Probability of an order spawning in a given minute
+    totalMins=360,  # Total minutes for the simulation (e.g., 3 hours = 180 minutes)
+    adjustmentFactor=2 # Amount by which to adjust the pickup time range based on avg lateness
+))
 
 graphType = 'grid'
 testNum = 4
-chooseLayout(graphType, testNum)
+#chooseLayout(graphType, testNum)
