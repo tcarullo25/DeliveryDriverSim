@@ -5,7 +5,7 @@
 4. DONE: more flexible rate based on duration (meet a certain wage)
 5. #TODO: reputation score for drivers based off meeting the pickup time & dropoff time (this should break ties into which driver gets the current order)
            add reliability correlating with reputation score (random seed)
-6. #TODO: make tests look nicer
+6. #TODO: make tests look nicer and post the parameters of each test in the console output
 7. #TODO: adding order while have a current order
 
 
