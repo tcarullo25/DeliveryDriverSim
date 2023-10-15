@@ -8,6 +8,7 @@
 6. #TODO: make tests look nicer and post the parameters of each test in the console output
 7. #TODO: adding order while have a current order
 
+# if we start to access a driver's currloc to order duration and totaltime a lot thru getOrderDuration, store these values
 
 # not currently reflecting driver distance as they proceed in route
 
