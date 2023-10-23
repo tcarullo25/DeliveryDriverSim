@@ -62,7 +62,7 @@ def initSim(map, orderQueue, drivers, totalMins):
     delayedOrders = 0
     finishedOrders = []
     # flat rate added to base pay for every order
-    hourlyRate = 20
+    hourlyRate = 25
 
     for minute in range(totalMins):
         # ORDER ASSIGNMENT LOGIC #
@@ -74,11 +74,9 @@ def initSim(map, orderQueue, drivers, totalMins):
             if availableDrivers:
                 currOrder = orderQueue.pop(0)
                 bestDriver, (currLocToOrderPickup, totalDuration) = getBestDriver(map, availableDrivers, currOrder)
-                #NOTE: using total order duration b/c orderPickUpToDropoff is too small
-                # min of base pay (change to be higher, paid for 15 minutes so $5) and whatever calculated rate (change hourly rate to be higher) is 
-                #rate = (totalDuration/60) * hourlyRate
+                # the order's price will be the lower of base pay or rate calculated from pickup to dropoff duration
                 rate = min(currOrder.price, hourlyRate * ((totalDuration - currLocToOrderPickup)/60))
-                currOrder.price += rate
+                currOrder.price = rate
                 driverReliabilityFactor = bestDriver.computeDriverReliabilityFactor()
                 currOrder.driverToPickupDur = currLocToOrderPickup * driverReliabilityFactor
                 pickupToDeliverDur = totalDuration - currLocToOrderPickup
@@ -129,7 +127,10 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 7
-seed = 80000000000000000000000
+testNum = 8
+seed = 1
+
+#NOTE: seed dictates randomness of drivers' lateness
 random.seed(seed)
+
 chooseLayout(graphType, testNum)

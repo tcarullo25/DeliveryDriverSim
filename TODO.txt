@@ -7,9 +7,15 @@ Week of 10/9
 5. DONE: reputation score for drivers based off meeting the pickup time & dropoff time (this should break ties into which driver gets the current order)
    DONE:       add reliability correlating with reputation score (random seed)
    NOTE: because most people are late very often, everyone's reputation will be low
-6. #TODO: make tests look nicer and post the parameters of each test in the console output
-7. #TODO: adding order while have a current order
-8. #TODO: work on finding a good balance/equilibrium between # drivers and order spawn rate
+   
+Week of 10/23
+1. #TODO: send out order to top n drivers, figure out which driver will take it, if multiple, then take the best one
+  driver policies: accept all (greedy), some driver calculation
+
+2. #TODO: (display test cases) draw graph of nodes to see where pickups and dropoffs are 
+1. #TODO: make tests look nicer and post the parameters of each test in the console output
+2. #TODO: adding order while have a current order
+3. #TODO: work on finding a good balance/equilibrium between # drivers and order spawn rate
 # if we start to access a driver's currloc to order duration and totaltime a lot thru getOrderDuration, store these values
 
 # not currently reflecting driver distance as they proceed in route
@@ -20,9 +26,3 @@ Week of 10/9
 
 # order objects should have the price of the actual order, then tip should be calculated from that and added to base pay
 # flat fee should be a separate parameter (like a base pay)
-
-
-#TODO: send out order to top n drivers, figure out which driver will take it, if multiple, then take the best one
-#  driver policies: accept all (greedy), some driver calculation
-
-# (display test case) draw graph of nodes to see where pickups and dropoffs are 

@@ -85,7 +85,6 @@ class Driver:
             self.reputation -= min(math.log(self.order.lateToPickupDuration + epsilon, base), maxPenalty) 
         elif not self.order.lateToPickupDuration:
             self.reputation += maxPenalty
-            print(self.order.lateToPickupDuration, min(math.log(maxLateness - self.order.lateToPickupDuration + epsilon, base), maxPenalty))
 
         self.reputation = max(min(self.reputation, 100), 0)
 
@@ -93,7 +92,7 @@ class Driver:
             self.reputation -= min(math.log(self.order.lateToDeliverDuration + epsilon, base), maxPenalty)
         elif not self.order.lateToDeliverDuration:
             self.reputation += maxPenalty
-            
+
         self.reputation = max(min(self.reputation, 100), 0)
         self.reputation = round(self.reputation, 2)
 
