@@ -2,8 +2,11 @@ import matplotlib.pyplot as plt
 import mplcursors
 import numpy as np
 
-def displayVisualizations(drivers, orderInfo, avgRate):
+def displayVisualizations(drivers, orderInfo, avgRate, totalMins):
     ordersCompleted, delayedOrders, finishedOrders = orderInfo
+    plotAllReputationsOverTime(drivers, totalMins)
+    plotAvgReputationOverTime(drivers, totalMins)
+    plotReputation(drivers)
     plotLatePickupsDeliveries(drivers)
     plotDriversLateOrders(drivers)
     plotDriverEarnings(drivers, avgRate)
@@ -14,7 +17,9 @@ def displayVisualizations(drivers, orderInfo, avgRate):
     plotNonproductiveTime(drivers)
     plotDelayedOrders(ordersCompleted, delayedOrders)
     allOrders = [driver.order for driver in drivers if driver.order] + finishedOrders
-    plotOrderDelayDurations(allOrders)
+    plotOrderLateToPickUpDurations(allOrders)
+    plotOrderLateToDeliverDurations(allOrders)
+    plotOrderDelayInAssignmentDurations(allOrders)
     
 def plotDriverEarnings(drivers, avgRate):
     earnings = [driver.earnings for driver in drivers]
@@ -84,6 +89,7 @@ def plotIdleTimes(drivers):
     plt.grid(axis='y', linestyle='--', linewidth=0.5)
     plt.tight_layout()
     plt.show()
+
 def plotNonproductiveTime(drivers):
     nonproductiveTimes = [driver.nonproductiveTime for driver in drivers]
     driverIDs = [driver.id for driver in drivers]
@@ -106,7 +112,7 @@ def plotDelayedOrders(totalOrders, delayedOrders):
     plt.tight_layout()
     plt.show()
 
-def plotOrderDelayDurations(orders):
+def plotOrderDelayInAssignmentDurations(orders):
     delays = [order.delayedInAssignmentDuration for order in orders if order.delayedInAssignmentDuration > 0]  
     plt.hist(delays, bins=range(1, max(delays) + 2), align='left', rwidth=0.8, 
                                             color='skyblue', edgecolor='black')
@@ -114,6 +120,26 @@ def plotOrderDelayDurations(orders):
     plt.xticks(np.arange(min(delays), max(delays) + 1, 1.0))
     plt.ylabel('Number of Orders')
     plt.title('Distribution of Order Delay in Assignment Durations')
+    plt.show()
+
+def plotOrderLateToPickUpDurations(orders):
+    delays = [order.lateToPickupDuration for order in orders]  
+    plt.hist(delays, bins=range(1, max(delays) + 2), align='left', rwidth=0.8, 
+                                            color='skyblue', edgecolor='black')
+    plt.xlabel('Delay Duration (in timesteps)')
+    plt.xticks(np.arange(min(delays), max(delays) + 1, 1.0))
+    plt.ylabel('Number of Orders')
+    plt.title('Distribution of Order Late to Pickup Durations')
+    plt.show()
+
+def plotOrderLateToDeliverDurations(orders):
+    delays = [order.lateToDeliverDuration for order in orders]  
+    plt.hist(delays, bins=range(1, max(delays) + 2), align='left', rwidth=0.8, 
+                                            color='skyblue', edgecolor='black')
+    plt.xlabel('Delay Duration (in timesteps)')
+    plt.xticks(np.arange(min(delays), max(delays) + 1, 1.0))
+    plt.ylabel('Number of Orders')
+    plt.title('Distribution of Order Late to Deliver Durations')
     plt.show()
 
 def plotLatePickupsDeliveries(drivers):
@@ -154,4 +180,44 @@ def plotDriversLateOrders(drivers):
     plt.legend()
 
     plt.title('Late Order Durations')
+    plt.show()
+
+def plotReputation(drivers):
+    reputations = [driver.reputation for driver in drivers]
+
+    plt.figure(figsize=(10, 5))
+    plt.hist(reputations, bins=20, color='blue', edgecolor='black')
+    plt.title('Distribution of Driver Reputations')
+    plt.xlabel('Reputation')
+    plt.ylabel('Number of Drivers')
+    plt.grid(axis='y', linestyle='--', linewidth=0.5)
+    plt.show()
+
+def plotAvgReputationOverTime(drivers, totalMins):
+    avgReputations = []
+
+    for minute in range(totalMins):
+        totalRepAtMin = sum(driver.reputationOverTime[minute] for driver in drivers)
+        avgRepAtMin = totalRepAtMin / len(drivers)
+        avgReputations.append(avgRepAtMin)
+    
+    plt.plot(range(totalMins), avgReputations, color='blue', label='Average Reputation')
+    plt.xlabel('Time (minutes)')
+    plt.ylabel('Average Reputation')
+    plt.title('Average Driver Reputation Over Time')
+    plt.grid(axis='y', linestyle='--', linewidth=0.5)
+    plt.legend()
+    plt.show()
+
+def plotAllReputationsOverTime(drivers, totalMins):
+    plt.figure(figsize=(15, 7))
+
+    for driver in drivers:
+        plt.plot(range(totalMins), driver.reputationOverTime, label=f'Driver {driver.id}')
+
+    plt.xlabel('Time (minutes)')
+    plt.ylabel('Reputation')
+    plt.title('Driver Reputation Over Time')
+    plt.grid(axis='y', linestyle='--', linewidth=0.5)
+    plt.legend(loc='upper right', fontsize='small', ncol=2)
     plt.show()

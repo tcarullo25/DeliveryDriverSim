@@ -1,0 +1,57 @@
+SEED: 2
+TEST: 5
+There was a total of 63 orders completed across all drivers.
+The earnings for each driver are as follows:
+• Driver 0 received $95.67, completed 7 orders and it took them 345 timesteps with a reputation of 0. 
+• Driver 1 received $84.97, completed 6 orders and it took them 327 timesteps with a reputation of 0. 
+• Driver 2 received $82.4, completed 6 orders and it took them 317 timesteps with a reputation of 0.  
+• Driver 3 received $83.1, completed 6 orders and it took them 319 timesteps with a reputation of 0.  
+• Driver 4 received $78.7, completed 5 orders and it took them 292 timesteps with a reputation of 7.2.
+• Driver 5 received $91.43, completed 8 orders and it took them 325 timesteps with a reputation of 0.
+• Driver 6 received $84.77, completed 5 orders and it took them 326 timesteps with a reputation of 8.68.
+• Driver 7 received $77.27, completed 6 orders and it took them 292 timesteps with a reputation of 0.
+• Driver 8 received $88.87, completed 8 orders and it took them 327 timesteps with a reputation of 0.
+• Driver 9 received $83.8, completed 6 orders and it took them 311 timesteps with a reputation of 0.
+The average wage across all drivers is: $14.18/hr
+
+SEED: 1
+TEST: 7
+There was a total of 140 orders completed across all drivers.
+The earnings for each driver are as follows:
+• Driver 0 received $83.67, completed 10 orders and it took them 229 timesteps with a reputation of 100.   
+• Driver 1 received $64.17, completed 7 orders and it took them 185 timesteps with a reputation of 85.55.  
+• Driver 2 received $79.77, completed 8 orders and it took them 245 timesteps with a reputation of 100.    
+• Driver 3 received $77.87, completed 9 orders and it took them 215 timesteps with a reputation of 100.    
+• Driver 4 received $69.53, completed 7 orders and it took them 213 timesteps with a reputation of 100.    
+• Driver 5 received $83.43, completed 10 orders and it took them 242 timesteps with a reputation of 100.   
+• Driver 6 received $71.57, completed 9 orders and it took them 195 timesteps with a reputation of 100.    
+• Driver 7 received $83.0, completed 9 orders and it took them 234 timesteps with a reputation of 100.     
+• Driver 8 received $95.8, completed 10 orders and it took them 277 timesteps with a reputation of 91.5.   
+• Driver 9 received $80.4, completed 10 orders and it took them 213 timesteps with a reputation of 100.    
+• Driver 10 received $81.63, completed 8 orders and it took them 250 timesteps with a reputation of 64.16. 
+• Driver 11 received $81.83, completed 9 orders and it took them 241 timesteps with a reputation of 100.   
+• Driver 12 received $83.87, completed 11 orders and it took them 221 timesteps with a reputation of 100.  
+• Driver 13 received $99.03, completed 11 orders and it took them 277 timesteps with a reputation of 84.31.
+• Driver 14 received $92.23, completed 12 orders and it took them 238 timesteps with a reputation of 100.  
+The average wage across all drivers is: $13.64/hr
+
+SEED: 2
+TEST: 7
+There was a total of 137 orders completed across all drivers.
+The earnings for each driver are as follows:
+• Driver 0 received $72.1, completed 7 orders and it took them 226 timesteps with a reputation of 63.34. 
+• Driver 1 received $77.63, completed 9 orders and it took them 220 timesteps with a reputation of 81.15.
+• Driver 2 received $81.13, completed 9 orders and it took them 236 timesteps with a reputation of 100.  
+• Driver 3 received $88.1, completed 10 orders and it took them 260 timesteps with a reputation of 83.15.
+• Driver 4 received $67.87, completed 8 orders and it took them 193 timesteps with a reputation of 100.  
+• Driver 5 received $73.53, completed 6 orders and it took them 238 timesteps with a reputation of 62.14.
+• Driver 6 received $83.93, completed 9 orders and it took them 250 timesteps with a reputation of 100.  
+• Driver 7 received $96.0, completed 11 orders and it took them 282 timesteps with a reputation of 100.  
+• Driver 8 received $92.03, completed 11 orders and it took them 259 timesteps with a reputation of 100. 
+• Driver 9 received $80.43, completed 9 orders and it took them 234 timesteps with a reputation of 100.  
+• Driver 10 received $75.57, completed 8 orders and it took them 235 timesteps with a reputation of 100. 
+• Driver 11 received $90.83, completed 12 orders and it took them 230 timesteps with a reputation of 100.
+• Driver 12 received $77.4, completed 9 orders and it took them 216 timesteps with a reputation of 100.
+• Driver 13 received $95.57, completed 10 orders and it took them 281 timesteps with a reputation of 85.55.
+• Driver 14 received $81.83, completed 9 orders and it took them 235 timesteps with a reputation of 100.
+The average wage across all drivers is: $13.71/hr

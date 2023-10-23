@@ -27,15 +27,26 @@ def getOrderDuration(map, currLoc, orderPickup, orderDropOff):
 
     return currLocToOrderDuration, totalTime
 
-def getClosestDriver(map, drivers, currOrder):
-    bestDur = None
+def getFurthestDriverDuration(map, drivers, currOrder):
+    furthestDur = None
+    for driver in drivers:
+        currLocToOrderDuration, _ = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
+        if furthestDur == None or currLocToOrderDuration > furthestDur:
+            furthestDur = currLocToOrderDuration
+    return furthestDur
+
+def getBestDriver(map, drivers, currOrder):
+    bestScore = float('-inf')
     bestDriver = None
+    bestDur = None
+    maxDuration = getFurthestDriverDuration(map, drivers, currOrder)
     for driver in drivers:
         currLocToOrderDuration, totalTime = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
-        # only compare duration from curr loc to order location, not total time
-        if bestDur == None or currLocToOrderDuration < bestDur[0]:
-            bestDur = currLocToOrderDuration, totalTime
+        score = driver.computeDriverOrderScore(currLocToOrderDuration, maxDuration)
+        if score > bestScore:
+            bestScore = score
             bestDriver = driver
+            bestDur = currLocToOrderDuration, totalTime 
     return bestDriver, bestDur
 
 def getAvailableDrivers(drivers):
@@ -45,25 +56,16 @@ def getAvailableDrivers(drivers):
             availableDrivers.append(driver)
     return availableDrivers
 
-# NOT CURRENTLY USED
-def checkRemainingOrders(orders, minute):
-    for order in orders:
-        if not order.pickedUp and order.pickupTime < minute:
-            order.lateToPickupDuration += 1
-        if not order.delivered and order.deliverTime < minute:
-            order.lateToDeliverDuration += 1
-
 def initSim(map, orderQueue, drivers, totalMins):
     # keep track of order info for data visualizations
     ordersCompleted = 0
     delayedOrders = 0
     finishedOrders = []
     # flat rate added to base pay for every order
-    hourlyRate = 14
+    hourlyRate = 20
 
     for minute in range(totalMins):
-
-        # ORDER ASSIGNMENT #
+        # ORDER ASSIGNMENT LOGIC #
         # peek at next order in queue to see if it's ready to release
         if orderQueue and orderQueue[0].releaseTime <= minute:
             currOrder = orderQueue[0]
@@ -71,13 +73,17 @@ def initSim(map, orderQueue, drivers, totalMins):
             # can only assign order if there is an open driver
             if availableDrivers:
                 currOrder = orderQueue.pop(0)
-                closestDriver, (currLocToOrderPickup, totalDuration) = getClosestDriver(map, availableDrivers, currOrder)
+                bestDriver, (currLocToOrderPickup, totalDuration) = getBestDriver(map, availableDrivers, currOrder)
                 #NOTE: using total order duration b/c orderPickUpToDropoff is too small
-                rate = (totalDuration/60) * hourlyRate
+                # min of base pay (change to be higher, paid for 15 minutes so $5) and whatever calculated rate (change hourly rate to be higher) is 
+                #rate = (totalDuration/60) * hourlyRate
+                rate = min(currOrder.price, hourlyRate * ((totalDuration - currLocToOrderPickup)/60))
                 currOrder.price += rate
-                currOrder.driverToPickupDur = currLocToOrderPickup
-                currOrder.pickupToDeliverDur = totalDuration - currLocToOrderPickup
-                closestDriver.addOrder(currOrder)
+                driverReliabilityFactor = bestDriver.computeDriverReliabilityFactor()
+                currOrder.driverToPickupDur = currLocToOrderPickup * driverReliabilityFactor
+                pickupToDeliverDur = totalDuration - currLocToOrderPickup
+                currOrder.pickupToDeliverDur = pickupToDeliverDur * driverReliabilityFactor
+                bestDriver.addOrder(currOrder)
             else:
                 # if not already delayed
                 if orderQueue[0].delayedInAssignmentDuration == 0:
@@ -86,63 +92,34 @@ def initSim(map, orderQueue, drivers, totalMins):
         # DRIVER LOGIC #
         for driver in drivers:
                 if driver.order != None:
-                    driver.currOrderTime += 1
-                    #NOTE: could mark late only after a certain amount of time? (e.g. after 10 mins driver will get penalized)
-
-                    # have not arrived at restaurant yet
-                    if not driver.order.pickedUp:
-                        driver.nonproductiveTime += 1
-                        driver.order.driverToPickupDur -= 1
-                        if driver.order.driverToPickupDur <= 0:
-                            driver.order.pickedUp = True
-                        # pickup time passed - increase late duration
-                        if driver.order.pickupTime < minute:
-                            driver.order.lateToPickupDuration += 1
-                    # have not delivered order yet
-                    if driver.order.pickedUp and not driver.order.delivered:
-                        driver.order.pickupToDeliverDur -= 1
-                        if driver.order.pickupToDeliverDur <= 0:
-                            driver.order.delivered = True
-                        # deliver time passed - increase late duration
-                        if driver.order.deliverTime < minute:
-                            driver.order.lateToDeliverDuration += 1
+                    driver.checkOrder(minute)
                     # check if completed order and if so reflect driver's status
                     if driver.order.delivered:
                         ordersCompleted += 1
                         finishedOrders.append(driver.order)
-                        if driver.order.lateToPickupDuration:
-                            driver.latePickupOrders.append(driver.order)
-                        if driver.order.lateToDeliverDuration:
-                            driver.lateDeliverOrders.append(driver.order)
-                        driver.currLoc = driver.order.dropoff
-                        driver.earnings += driver.order.price
-                        driver.totalOrders += 1
-                        driver.totalOrderTime += driver.currOrderTime
-                        driver.orderTimes.append(driver.currOrderTime)
-                        driver.currOrderTime = 0
-                        driver.order = None
+                        driver.updateReputation()
+                        driver.completeOrder()
                 else:
                     driver.idleTime += 1
                     driver.nonproductiveTime += 1
-        # checks pickup/delivery time for orders that are not yet assigned to drivers
-        #NOTE: orders may already be very late before a driver is assigned, could be unfair?
-        #checkRemainingOrders(orderQueue, minute)
+                driver.reputationOverTime.append(driver.reputation)
 
     return drivers, (ordersCompleted, delayedOrders, finishedOrders)
 
 def displayResults(drivers, orderInfo, totalMins):
     ordersCompleted, _, _ = orderInfo
-    res = f'There was a total of {ordersCompleted} orders completed across all drivers.\nThe earnings for each driver are as follows:\n'
+    res = f'SEED: {seed}\nTEST: {testNum}\n'
+    res += f'There was a total of {ordersCompleted} orders completed across all drivers.\nThe earnings for each driver are as follows:\n'
     sumOfRates = 0
     for driver in drivers:
         driver.earnings = round(driver.earnings, 2)
         driverRate = driver.earnings / (totalMins/60)
         sumOfRates += driverRate
-        res += f'• Driver {driver.id} received ${driver.earnings}, completed {driver.totalOrders} orders and it took them {driver.totalOrderTime} timesteps.\n'
+        res += f'• Driver {driver.id} received ${driver.earnings}, completed {driver.totalOrders} orders and it took them {driver.totalOrderTime} timesteps with a reputation of {driver.reputation}.\n'
     avgRate = round(sumOfRates/len(drivers),2)
     res += f'The average wage across all drivers is: ${avgRate}/hr'
     print(res)
-    displayVisualizations(drivers, orderInfo, avgRate)
+    displayVisualizations(drivers, orderInfo, avgRate, totalMins)
 
 def chooseLayout(graphType, testNum):
     if graphType == 'grid':
@@ -152,5 +129,7 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 4
+testNum = 7
+seed = 80000000000000000000000
+random.seed(seed)
 chooseLayout(graphType, testNum)
