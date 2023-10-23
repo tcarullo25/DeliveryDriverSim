@@ -11,8 +11,8 @@ Week of 10/9
 Week of 10/23
 1. #TODO: send out order to top n drivers, figure out which driver will take it, if multiple, then take the best one
   driver policies: accept all (greedy), some driver calculation
-
 2. #TODO: (display test cases) draw graph of nodes to see where pickups and dropoffs are 
+
 1. #TODO: make tests look nicer and post the parameters of each test in the console output
 2. #TODO: adding order while have a current order
 3. #TODO: work on finding a good balance/equilibrium between # drivers and order spawn rate
