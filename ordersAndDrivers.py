@@ -48,8 +48,6 @@ class Driver:
         if not self.order.pickedUp:
             self.nonproductiveTime += 1
             self.order.driverToPickupDur -= 1
-            if self.order.driverToPickupDur <= 0:
-                self.order.pickedUp = True
             # pickup time passed - increase late duration
             if self.order.pickupTime < minute:
                 self.order.lateToPickupDuration += 1
@@ -61,10 +59,12 @@ class Driver:
             # deliver time passed - increase late duration
             if self.order.deliverTime < minute:
                 self.order.lateToDeliverDuration += 1
+        # check if order was picked up last to avoid skipping a minute of the deliver dur
+        if self.order.driverToPickupDur <= 0:
+                self.order.pickedUp = True
 
     def completeOrder(self):
         if self.order.lateToPickupDuration:
-            #print(self.order.id, self.order.pickupTime, self.order.lateToPickupDuration)
             self.latePickupOrders.append(self.order)
         if self.order.lateToDeliverDuration:
             self.lateDeliverOrders.append(self.order)
@@ -79,19 +79,17 @@ class Driver:
     def updateReputation(self):
         maxPenalty = 10
         maxLateness = 15 # driver will get the max penalty if lateness >= to this threshold
-        epsilon = 1e-99 # in case lateness durations are 0
-        base = (maxLateness + epsilon)**(1/maxPenalty) # base to scale wrt maxLateness & maxPenalty
+        base = maxLateness**(1/maxPenalty) # base to scale wrt maxLateness & maxPenalty
         gracePeriod = 5
-
         if self.order.lateToPickupDuration > gracePeriod: 
-            self.reputation -= min(math.log(self.order.lateToPickupDuration + epsilon, base), maxPenalty) 
+            self.reputation -= min(math.log(self.order.lateToPickupDuration, base), maxPenalty) 
         elif not self.order.lateToPickupDuration:
             self.reputation += maxPenalty
 
         self.reputation = max(min(self.reputation, 100), 0)
 
         if self.order.lateToDeliverDuration > gracePeriod:
-            self.reputation -= min(math.log(self.order.lateToDeliverDuration + epsilon, base), maxPenalty)
+            self.reputation -= min(math.log(self.order.lateToDeliverDuration, base), maxPenalty)
         elif not self.order.lateToDeliverDuration:
             self.reputation += maxPenalty
 
