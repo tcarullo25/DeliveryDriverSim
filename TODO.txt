@@ -13,9 +13,10 @@ Week of 10/23
   driver policies: accept all (greedy), some driver calculation
 2. #TODO: (display test cases) draw graph of nodes to see where pickups and dropoffs are 
 
-1. #TODO: make tests look nicer and post the parameters of each test in the console output
-2. #TODO: adding order while have a current order
-3. #TODO: work on finding a good balance/equilibrium between # drivers and order spawn rate
+OTHER NOTES:
+#TODO: make tests look nicer and post the parameters of each test in the console output
+#TODO: adding order while have a current order
+#TODO: work on finding a good balance/equilibrium between # drivers and order spawn rate
 # if we start to access a driver's currloc to order duration and totaltime a lot thru getOrderDuration, store these values
 
 # not currently reflecting driver distance as they proceed in route

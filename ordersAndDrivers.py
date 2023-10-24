@@ -1,5 +1,6 @@
 import math 
 import random 
+
 class Order:
     def __init__(self, id, pickup, dropoff, releaseTime, pickupTime, deliverTime, price):
         self.id = id
@@ -19,9 +20,10 @@ class Order:
         self.pickupToDeliverDur = 0
 
 class Driver:
-    def __init__(self, id, startLoc):
+    def __init__(self, id, startLoc, policy):
         self.id = id
         self.currLoc = startLoc
+        self.policy = policy
         self.order = None
         self.earnings = 0
         self.totalOrders = 0
@@ -110,3 +112,5 @@ class Driver:
         # randomness allowing driver to either be faster or slower than expected
         randomFactor = baseFactor * w2 * random.uniform(-1, 1)
         return baseFactor + randomFactor
+
+    
