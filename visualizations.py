@@ -114,6 +114,12 @@ def plotDelayedOrders(totalOrders, delayedOrders):
 
 def plotOrderDelayInAssignmentDurations(orders):
     delays = [order.delayedInAssignmentDuration for order in orders if order.delayedInAssignmentDuration > 0]  
+    if not delays:  
+        plt.xlabel('Delay Duration (in timesteps)')
+        plt.ylabel('Number of Orders')
+        plt.title('Distribution of Order Delay in Assignment Durations')
+        plt.show()  
+        return  
     plt.hist(delays, bins=range(1, max(delays) + 2), align='left', rwidth=0.8, 
                                             color='skyblue', edgecolor='black')
     plt.xlabel('Delay Duration (in timesteps)')
