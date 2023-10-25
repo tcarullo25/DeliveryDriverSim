@@ -3,6 +3,7 @@ from ordersAndDrivers import *
 from tests import *
 from visualizations import *
 from driverPolicies import *
+from companyPolicies import *
 
 def getOrderDuration(map, currLoc, orderPickup, orderDropOff):
     currToOrderSP = nx.shortest_path(map.G, 
@@ -93,7 +94,7 @@ def initSim(map, orderQueue, drivers, basePay, totalMins):
 
     delayedQueue = []
     hourlyRate = 25
-
+    policy = KBestDriversPolicy()
     for minute in range(totalMins):
         # ORDER ASSIGNMENT LOGIC #
         # first check for any delayed orders
