@@ -1,6 +1,6 @@
 from graphs import *
 from ordersAndDrivers import *
-from policies import *
+from driverPolicies import *
 from collections import deque
 import random
 
@@ -124,7 +124,7 @@ def test{testNum}():
         for id, start, policy in driverInfo:
             drivers.append(Driver(id, start, policyDict[policy]))
 
-        return map, orderQueue, totalMins, drivers'''
+        return map, orderQueue, totalMins, drivers, basePay'''
     return testFunction
 
 
@@ -1226,8 +1226,8 @@ def test9():
 349), (121, 63, 47, 318, 343, 359), (122, 51, 60, 319, 335, 351), (123, 32, 40, 321, 345, 359), (124, 9, 8, 323, 346, 357), (125, 16, 17, 325, 346, 356), (126, 43, 45, 327, 345, 361), (127, 33, 42, 329, 351, 366), (128, 55, 54, 332, 357, 367), (129, 63, 55, 333, 355, 365), (130, 18, 27, 334, 357, 372), (131, 4, 5, 339, 354, 368), (132, 33, 25, 340, 356, 367), (133, 32, 34, 342, 367, 383), (134, 22, 23, 345, 369, 379), (135, 51, 53, 346, 364, 379), 
 (136, 53, 45, 348, 368, 379), (137, 21, 23, 350, 372, 388), (138, 30, 22, 351, 372, 382), (139, 50, 59, 353, 376, 392), (140, 15, 13, 357, 372, 387), (141, 48, 40, 359, 384, 393)]
         driverInfo = \
-        [(0, 22, 'greedy'), (1, 29, 'greedy'), (2, 37, 'greedy'), (3, 26, 'greedy'), (4, 37, 'greedy'), (5, 35, 'greedy'), (6, 23, 'greedy'), (7, 1, 'greedy'), (8, 61, 'greedy'), (9, 51, 'greedy'), (10, 1, 
-'greedy'), (11, 58, 'greedy'), (12, 4, 'greedy'), (13, 42, 'greedy'), (14, 42, 'greedy')]
+        [(0, 22, 'rateFocused'), (1, 29, 'greedy'), (2, 37, 'rateFocused'), (3, 26, 'greedy'), (4, 37, 'rateFocused'), (5, 35, 'greedy'), (6, 23, 'greedy'), (7, 1, 'rateFocused'), (8, 61, 'greedy'), (9, 51, 'greedy'), (10, 1, 
+'greedy'), (11, 58, 'rateFocused'), (12, 4, 'rateFocused'), (13, 42, 'greedy'), (14, 42, 'rateFocused')]
         orderQueue = []
         drivers = []
         # INIT ORDERS
@@ -1237,7 +1237,7 @@ def test9():
         for id, start, policy in driverInfo:
             drivers.append(Driver(id, start, policyDict[policy]))
 
-        return map, orderQueue, totalMins, drivers
+        return map, orderQueue, totalMins, drivers, basePay
 
 #PARAMS: testNum, n, m, basePay, numDrivers, durationRange, pickupTimeRange, orderSpawnRate, 
 # totalMins, dropoffThreshold=12, deliverTimeWiggleRoom=4
