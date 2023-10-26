@@ -9,10 +9,10 @@ Week of 10/9
    NOTE: because most people are late very often, everyone's reputation will be low
    
 Week of 10/23
-1. #TODO: send out order to top n drivers, figure out which driver will take it, if multiple, then take the best one
+1. DONE: send out order to top n drivers, figure out which driver will take it, if multiple, then take the best one
   driver policies: accept all (greedy), some driver calculation
-2. #TODO: company policies
-3. #TODO: (display test cases) draw graph of nodes to see where pickups and dropoffs are 
+2. DONE: company policies
+3. DONE: (display test cases) draw graph of nodes to see where pickups and dropoffs are 
 
 OTHER NOTES:
 #TODO: make tests look nicer and post the parameters of each test in the console output
