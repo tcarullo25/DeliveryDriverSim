@@ -4,77 +4,7 @@ from tests import *
 from visualizations import *
 from driverPolicies import *
 from companyPolicies import *
-
-def getOrderDuration(map, currLoc, orderPickup, orderDropOff):
-    currToOrderSP = nx.shortest_path(map.G, 
-                    source=currLoc, target=orderPickup, weight = 'weight')
-    orderToDestSP = nx.shortest_path(map.G, 
-                    source=orderPickup, target=orderDropOff, weight = 'weight')
-    totalTime = 0
-    currLocToOrderDuration = 0
-
-    # currLoc -> orderPickup duration
-    for i in range(1, len(currToOrderSP)):
-        currNode, prevNode = currToOrderSP[i], currToOrderSP[i-1]
-        duration = map.adjMatrix[currNode][prevNode]
-        totalTime += duration
-
-    currLocToOrderDuration = totalTime
-
-    # orderPickup -> orderDropOff duration
-    for i in range(1, len(orderToDestSP)):
-        currNode, prevNode = orderToDestSP[i], orderToDestSP[i-1]
-        duration = map.adjMatrix[currNode][prevNode]
-        totalTime += duration
-
-    return currLocToOrderDuration, totalTime
-
-def getFurthestDriverDuration(map, drivers, currOrder):
-    furthestDur = None
-    for driver in drivers:
-        currLocToOrderDuration, _ = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
-        if furthestDur == None or currLocToOrderDuration > furthestDur:
-            furthestDur = currLocToOrderDuration
-    return furthestDur
-
-def getKBestDrivers(map, drivers, currOrder, k=5):
-    best = []
-    maxDuration = getFurthestDriverDuration(map, drivers, currOrder)
-    for driver in drivers:
-        currLocToOrderDuration, totalTime = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
-        score = driver.computeDriverOrderScore(currLocToOrderDuration, maxDuration)
-        best.append((driver, score, (currLocToOrderDuration, totalTime)))
-
-    bestSorted = sorted(best, key=lambda x: x[1], reverse=True)
-    bestSorted = bestSorted[:k]
-    bestDrivers = []
-    bestDurs = []
-    
-    for driver, _, (currLocToOrderDuration, totalTime) in bestSorted:
-        bestDrivers.append(driver)
-        bestDurs.append((currLocToOrderDuration, totalTime))
-    return bestDrivers, bestDurs
-
-def getBestDriver(map, drivers, currOrder):
-    bestScore = float('-inf')
-    bestDriver = None
-    bestDur = None
-    maxDuration = getFurthestDriverDuration(map, drivers, currOrder)
-    for driver in drivers:
-        currLocToOrderDuration, totalTime = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
-        score = driver.computeDriverOrderScore(currLocToOrderDuration, maxDuration)
-        if score > bestScore:
-            bestScore = score
-            bestDriver = driver
-            bestDur = currLocToOrderDuration, totalTime 
-    return bestDriver, bestDur
-
-def getAvailableDrivers(drivers):
-    availableDrivers = []
-    for driver in drivers:
-        if driver.order == None:
-            availableDrivers.append(driver)
-    return availableDrivers
+import copy
 
 def driverDecide(drivers, durs, currOrder, minute):
     remainingDrivers = []
@@ -87,79 +17,14 @@ def driverDecide(drivers, durs, currOrder, minute):
     return remainingDrivers
 
 def initSim(map, orderQueue, drivers, basePay, totalMins):
-    # keep track of order info for data visualizations
     ordersCompleted = 0
-    delayedOrders = 0
     finishedOrders = []
+    company = KBestDriversPolicy()
 
-    delayedQueue = []
-    hourlyRate = 25
-    policy = KBestDriversPolicy()
     for minute in range(totalMins):
-        # ORDER ASSIGNMENT LOGIC #
-        # first check for any delayed orders
-        newDelayedQueue = []
-        for (order, bestDrivers, bestDurs) in delayedQueue:
-            # get the best drivers for the given order and check who is still available 
-            delayedBestDrivers = getAvailableDrivers(bestDrivers) 
-            delayedRemainingDrivers = driverDecide(delayedBestDrivers, bestDurs, order, minute)
-            # if no driver still does not want to take it, add order back to queue
-            if not delayedRemainingDrivers:
-                order.price += 1
-                newDelayedQueue.append((order, delayedBestDrivers, bestDurs))
-            else:
-                bestDriver, (currLocToOrderPickup, totalDuration) = getBestDriver(map, delayedRemainingDrivers, order)
-                rate = min(basePay, hourlyRate * ((totalDuration - currLocToOrderPickup)/60))
-                additionalCompensation = order.price - basePay
-                order.price = rate + additionalCompensation
-                driverReliabilityFactor = bestDriver.computeDriverReliabilityFactor()
-                order.driverToPickupDur = math.ceil(currLocToOrderPickup * driverReliabilityFactor)
-                pickupToDeliverDur = totalDuration - currLocToOrderPickup
-                order.pickupToDeliverDur = math.ceil(pickupToDeliverDur * driverReliabilityFactor) 
-                bestDriver.addOrder(order)
+        # ORDER LOGIC #
+        company.orderStep(map, orderQueue, drivers, basePay, minute)
 
-        delayedQueue = newDelayedQueue
-
-        # peek at next order in queue to see if it's ready to release
-        if orderQueue and orderQueue[0].releaseTime <= minute:
-            currOrder = orderQueue[0]
-            availableDrivers = getAvailableDrivers(drivers)
-            # can only assign order if there is an open driver
-            if availableDrivers:
-                currOrder = orderQueue.pop(0)
-                # get all potential best drivers
-                bestDrivers, bestDurs = getKBestDrivers(map, availableDrivers, currOrder)
-                # see who accepts 
-                #NOTE: what if nobody accepts????
-                remainingDrivers = driverDecide(bestDrivers, bestDurs, currOrder, minute)
-                if not remainingDrivers:
-                    # add bestDrivers and the currOrder to a delayedQueue
-                    # check delayedQueue before orderQueue - check if nonempty
-                    # if so increment order price and run driverDecide again
-                    currOrder.price += 1
-                    delayedQueue.append((currOrder, bestDrivers, bestDurs))
-                else:
-                # get the best driver out of the previous best who accepted order
-                #NOTE: the best driver will be in terms of JUST the remaining drivers (the max duration likely changed), 
-                # so the answer may slightly vary from what the single-most best driver was before
-                    bestDriver, (currLocToOrderPickup, totalDuration) = getBestDriver(map, remainingDrivers, currOrder)
-                    # the order's price will be the lower of base pay or rate calculated from pickup to dropoff duration
-                    # NOTE: are we sure we dont want to add the rate to base pay?
-                    rate = min(basePay, hourlyRate * ((totalDuration - currLocToOrderPickup)/60))
-                    currOrder.price = rate
-                    driverReliabilityFactor = bestDriver.computeDriverReliabilityFactor()
-                    currOrder.driverToPickupDur = currLocToOrderPickup * driverReliabilityFactor
-                    pickupToDeliverDur = totalDuration - currLocToOrderPickup
-                    currOrder.pickupToDeliverDur = pickupToDeliverDur * driverReliabilityFactor
-                    bestDriver.addOrder(currOrder)
-                    # NOTE: make the above logic starting from rate a driver method called assignOrder()
-            else:
-                #NOTE: this isnt 100% accurate, should check for all orders in order queue 
-                # (potential solution: loop through order queue and delayed queue)
-                # if not already delayed
-                if orderQueue[0].delayedInAssignmentDuration == 0:
-                    delayedOrders += 1
-                orderQueue[0].delayedInAssignmentDuration += 1
         # DRIVER LOGIC #
         for driver in drivers:
                 if driver.order != None:
@@ -174,6 +39,8 @@ def initSim(map, orderQueue, drivers, basePay, totalMins):
                     driver.idleTime += 1
                     driver.nonproductiveTime += 1
                 driver.reputationOverTime.append(driver.reputation)
+                
+    delayedOrders = company.finishSim()
     return drivers, (ordersCompleted, delayedOrders, finishedOrders)
 
 def displayResults(drivers, orderInfo, totalMins):
@@ -194,12 +61,15 @@ def displayResults(drivers, orderInfo, totalMins):
 def chooseLayout(graphType, testNum):
     if graphType == 'grid':
         map, orderQueue, totalMins, drivers, basePay = eval(f'test{testNum}()')
-
+    allOrders = copy.copy(orderQueue)
+    driversStart = copy.copy(drivers)
     drivers, orderInfo = initSim(map, orderQueue, drivers, basePay, totalMins)
+    map.displayGraphDrivers(driversStart)
+    map.displayGraphOrders(allOrders) 
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 9
+testNum = 10
 seed = 2
 
 #NOTE: seed dictates randomness of drivers' lateness

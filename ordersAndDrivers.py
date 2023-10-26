@@ -12,7 +12,7 @@ class Order:
         self.deliverTime = deliverTime
         self.pickedUp = False
         self.delivered = False
-        self.lateToPickupDuration = 0
+        self.lateToPickupDuration = 0 #late pickup and deliver durs accumulate only after driver assignment
         self.lateToDeliverDuration = 0
         self.delayedInAssignmentDuration = 0
         # all below will update when assigned to driver

@@ -14,6 +14,25 @@ def getBestDriver(map, drivers, currOrder):
             bestDur = currLocToOrderDuration, totalTime 
     return bestDriver, bestDur
 
+def getKBestDrivers(map, drivers, currOrder, k=5):
+    best = []
+    maxDuration = getFurthestDriverDuration(map, drivers, currOrder)
+    for driver in drivers:
+        currLocToOrderDuration, totalTime = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
+        score = driver.computeDriverOrderScore(currLocToOrderDuration, maxDuration)
+        best.append((driver, score, (currLocToOrderDuration, totalTime)))
+
+    bestSorted = sorted(best, key=lambda x: x[1], reverse=True)
+    bestSorted = bestSorted[:k]
+    bestDrivers = []
+    bestDurs = []
+    
+    for driver, _, (currLocToOrderDuration, totalTime) in bestSorted:
+        bestDrivers.append(driver)
+        bestDurs.append((currLocToOrderDuration, totalTime))
+        
+    return bestDrivers, bestDurs
+    
 def getAvailableDrivers(drivers):
     availableDrivers = []
     for driver in drivers:

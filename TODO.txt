@@ -22,11 +22,8 @@ OTHER NOTES:
 
 # not currently reflecting driver distance as they proceed in route
 
-# if order is overdue, increase price ? 
-
 # give drivers policies & name driver's by their trait to better understand data
 
-# order objects should have the price of the actual order, then tip should be calculated from that and added to base pay
-# flat fee should be a separate parameter (like a base pay)
+# might need to increase drivers for SelectiveBroadPolicy sinc
 
 # is there a standard python made just for imports?
