@@ -74,7 +74,7 @@ def getDeliverTime(randomMap, pickup, dropoff):
     return totalTime
 
 def genTest(testNum, n, m, basePay, numDrivers, durationRange, pickupTimeRange, orderSpawnRate, totalMins, dropoffThreshold=12, deliverTimeWiggleRoom=4):
-    randomMap = RandomGridLayout(n, m, n * m, durationRange)
+    randomMap = RandomGridLayout(n, m, n * m, durationRange)                               
     orderCount = 0
     numNodes = n * m 
     orderQueue = []
@@ -85,10 +85,11 @@ def genTest(testNum, n, m, basePay, numDrivers, durationRange, pickupTimeRange, 
             pickup = random.randint(0, numNodes-1)
             dropoff = genDropoff(randomMap, pickup, dropoffThreshold)
             if dropoff == None: # could not meet threshold, exit
-                return
+                return                                                      
             start, end = pickupTimeRange
             pickupTime = minute + random.randint(start, end) 
             deliverTime = pickupTime
+            # dont penalize twice 
             deliverTime += getDeliverTime(randomMap, pickup, dropoff) + deliverTimeWiggleRoom
             orderQueue.append((orderCount, pickup, dropoff, minute, pickupTime, deliverTime))
             orderCount += 1

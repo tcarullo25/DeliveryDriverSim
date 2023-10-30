@@ -19,6 +19,12 @@ class Order:
         self.driverToPickupDur = 0 
         self.pickupToDeliverDur = 0
 
+# add behaviors: self aware drivers, where they think they are going to be late or not
+# in place of reputation score 
+# aggressive, normal, slow
+
+# how they "think" they drive score - woudl be used for reputation focused policy
+
 class Driver:
     def __init__(self, id, startLoc, policy):
         self.id = id
@@ -84,6 +90,7 @@ class Driver:
         if self.order.lateToPickupDuration > gracePeriod: 
             self.reputation -= min(math.log(self.order.lateToPickupDuration, base), maxPenalty) 
         elif not self.order.lateToPickupDuration:
+            # keep track of number of consecutive orders on time previously
             self.reputation += maxPenalty
 
         self.reputation = max(min(self.reputation, 100), 0)
@@ -109,6 +116,13 @@ class Driver:
         baseFactor = 1 + w1 * (1 - self.reputation/100)
         # randomness allowing driver to either be faster or slower than expected
         randomFactor = baseFactor * w2 * random.uniform(-1, 1)
-        return baseFactor + randomFactor
-
+        return baseFactor + randomFactor 
     
+# change reliability factor function ^ preset behavior factor (1.1, 1.0, .9) + w2 * random.uniform(-1, 1)
+
+
+
+# LATER:
+#  compute awareness factor - take into account behavior factor (no randomness factor) * theoretical duration
+#  awareness + reputation  
+

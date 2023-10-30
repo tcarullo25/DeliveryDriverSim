@@ -14,6 +14,12 @@ Week of 10/23
 2. DONE: company policies
 3. DONE: (display test cases) draw graph of nodes to see where pickups and dropoffs are 
 
+Week of 10/30
+1. #TODO: change reliability factor function to ahve preset behavior factor (e.g. (1.1, 1.0, .9) + w2 * random.uniform(-1, 1))
+2. #TODO: change currloctorderpicup and totaltime to behavior factored times in rep policy
+3. #TODO: dont penalize driver twice for being late if elapsed time <= deliver time
+4. #TODO: display vehicles around order (that are not busy), order route, & vehicle chosen
+
 OTHER NOTES:
 #TODO: make tests look nicer and post the parameters of each test in the console output
 #TODO: adding order while have a current order
@@ -27,3 +33,5 @@ OTHER NOTES:
 # might need to increase drivers for SelectiveBroadPolicy sinc
 
 # is there a standard python made just for imports?
+
+

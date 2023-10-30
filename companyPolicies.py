@@ -80,7 +80,7 @@ class KBestDriversPolicy(Company):
             rate = min(basePay, self.hourlyRate * ((totalDuration - currLocToOrderPickup)/60))
             currOrder.price = rate
             driverReliabilityFactor = bestDriver.computeDriverReliabilityFactor()
-            currOrder.driverToPickupDur = currLocToOrderPickup * driverReliabilityFactor
+            currOrder.driverToPickupDur = currLocToOrderPickup * driverReliabilityFactor  
             pickupToDeliverDur = totalDuration - currLocToOrderPickup
             currOrder.pickupToDeliverDur = pickupToDeliverDur * driverReliabilityFactor
             bestDriver.addOrder(currOrder)

@@ -69,7 +69,7 @@ def chooseLayout(graphType, testNum):
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 10
+testNum = 9
 seed = 2
 
 #NOTE: seed dictates randomness of drivers' lateness
