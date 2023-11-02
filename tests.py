@@ -73,13 +73,14 @@ def getDeliverTime(randomMap, pickup, dropoff):
 
     return totalTime
 
-def genTest(testNum, n, m, basePay, numDrivers, durationRange, pickupTimeRange, orderSpawnRate, totalMins, dropoffThreshold=12, deliverTimeWiggleRoom=4):
+def genTest(testNum, n, m, basePay, numDrivers, durationRange, pickupTimeRange, orderSpawnRate, totalMins, dropoffThreshold=12, deliverTimeWiggleRoom=0):
     randomMap = RandomGridLayout(n, m, n * m, durationRange)                               
     orderCount = 0
     numNodes = n * m 
     orderQueue = []
     policies = ['rateFocused', 'greedy']
-    drivers = [(i, random.randint(0, numNodes-1), random.choice(policies)) for i in range(0, numDrivers)]
+    driverBehaviors = [1.1, 1.0, 0.9]
+    drivers = [(i, random.randint(0, numNodes-1), random.choice(policies), random.choice(driverBehaviors)) for i in range(0, numDrivers)]
     for minute in range(totalMins):
         if random.random() < orderSpawnRate:
             pickup = random.randint(0, numNodes-1)
@@ -122,8 +123,8 @@ def test{testNum}():
         for id, pickup, dropoff, releaseTime, pickupTime, deliverTime in orderInfo:
             orderQueue.append(Order(id, pickup, dropoff, releaseTime, pickupTime, deliverTime, basePay))
         # INIT DRIVERS
-        for id, start, policy in driverInfo:
-            drivers.append(Driver(id, start, policyDict[policy]))
+        for id, start, policy, driverBehavior in driverInfo:
+            drivers.append(Driver(id, start, policyDict[policy], driverBehavior))
 
         return map, orderQueue, totalMins, drivers, basePay'''
     return testFunction
@@ -1428,6 +1429,511 @@ def test10():
 
         return map, orderQueue, totalMins, drivers, basePay
 
+# TEST 11
+# LAYOUT: 8x8 GRID
+# 20 DRIVERS, 6 HOUR PERIOD   
+# FLAT RATE $5/order
+# EDGE DURATIONS RANGE (5, 10)
+# PICKUP TIME RANGE (15, 25)  
+# DELIVER TIME WIGGLE ROOM 0  
+# DROPOFF THRESHOLD 12        
+def test11():
+        n = 8
+        m = 8
+        basePay = 5 # total price will be calculated later when assigned to driver
+        totalMins = 360
+        adjMatrix = \
+        [
+ [ None,    6, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [    6, None,   10, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None,   10, None,    9, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None,    9, None,    5, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None,    5, None,    9, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None,    9, None,   10, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None,   10, None,   10, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [    6, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None,    7, None, None, None, None, None, None,    5, None,   10, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None,    8, None, None, None, None, None, None,   10, None,    8, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None,   10, None, None, None, None, None, None,    8, None,    8, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None,    6, None, None, None, None, None, None,    8, None,   10, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None,    7, None, None, None, None, None, None,   10, None,    5, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None,    9, None, None, None, None, None, None,    5, None,    8, None, None, None, None, None, None,   10, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    7, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    9, None,    7, None, None, None, None, None, None,    6, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    7, None,   10, None, None, None, None, None, None,    8, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,   10, None,    9, None, None, None, None, None, None,    8, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    9, None,    8, None, None, None, None, None, None,    5, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    8, None,    9, None, None, None, None, None, None, 
+   9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    9, None,   10, None, None, None, None, None, 
+None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,   10, None, None, None, None, None, None, 
+None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None,    6, None, None, None, 
+None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    6, None,    5, None, None, 
+None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    5, None,    7, None, 
+None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    7, None,    5, 
+None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    5, None, 
+   5, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    5, 
+None,    8, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None, 
+   8, None,    5, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, 
+None,    5, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, 
+None, None, None, None,    5, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, 
+None, None, None,    5, None,    5, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, 
+None, None, None, None,    5, None,    8, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, 
+None, None, None, None, None,    8, None,    9, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, 
+None, None, None, None, None, None,    9, None,    9, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+   9, None, None, None, None, None, None,    9, None,   10, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None,    7, None, None, None, None, None, None,   10, None,    7, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None,    6, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None,    8, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None,    6, None, None, None, None, None, None,   10, None,    8, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None,    5, None, None, None, None, None, None,    8, None,   10, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None,    5, None, None, None, None, None, None,   10, None,    9, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    9, None,   10, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,   10, None,    8, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    8, None,    9, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    5, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    5, None,    8, None, None, None, None, None, None,    9, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    8, None,    7, None, None, None, None, None, None,    
+7, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    7, None,    9, None, None, None, None, None, None,   10, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    9, None,   10, None, None, None, None, None, None,   10, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,   10, None,   10, None, None, None, None, None, None,   10, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,   10, None,    6, None, None, None, None, None, None,    7, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None,    5 ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    6, None,   10, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,   10, None,    5, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    
+5, None,    7, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    7, None,    6, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    6, None,   10, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,   10, None,   10 ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,   10, None ]
+]
+        map = GridLayout(n, m, n * m, adjMatrix)
+        policyDict = { 'rateFocused' : rateFocused, 'greedy' : greedy }
+        orderInfo = \
+        [(0, 0, 9, 0, 18, 29), (1, 37, 45, 4, 19, 27), (2, 56, 40, 5, 25, 37), (3, 2, 1, 8, 23, 33), (4, 37, 38, 16, 33, 43), (5, 37, 29, 20, 43, 52), (6, 56, 49, 22, 47, 57), (7, 20, 19, 24, 39, 48), (8, 3, 4, 27, 51, 56), (9, 24, 16, 28, 53, 60), (10, 45, 44, 29, 52, 62), (11, 56, 49, 32, 54, 64), (12, 15, 23, 37, 62, 72), (13, 8, 1, 40, 57, 69), (14, 22, 21, 41, 61, 70), (15, 48, 56, 45, 65, 70), (16, 24, 17, 47, 71, 83), (17, 42, 33, 49, 72, 82), (18, 59, 51, 51, 68, 78), (19, 1, 9, 52, 72, 79), (20, 35, 36, 53, 74, 83), 
+(21, 38, 47, 55, 80, 92), (22, 24, 33, 58, 82, 92), (23, 54, 63, 59, 74, 85), (24, 59, 51, 63, 78, 88), (25, 23, 15, 64, 79, 89), (26, 0, 8, 66, 87, 93), (27, 57, 49, 67, 82, 91), (28, 35, 36, 70, 85, 94), (29, 27, 26, 75, 97, 104), (30, 53, 61, 80, 105, 115), (31, 17, 26, 85, 105, 116), (32, 44, 43, 87, 111, 120), (33, 38, 30, 90, 115, 122), (34, 21, 
+20, 98, 116, 124), (35, 29, 21, 105, 123, 132), (36, 22, 30, 111, 129, 138), (37, 38, 39, 112, 128, 135), (38, 62, 54, 116, 133, 140), (39, 34, 41, 123, 146, 157), (40, 59, 58, 
+125, 149, 154), (41, 3, 11, 128, 147, 157), (42, 23, 22, 133, 148, 158), (43, 31, 38, 134, 155, 167), (44, 50, 58, 136, 157, 164), (45, 22, 30, 138, 157, 166), (46, 2, 3, 144, 159, 168), (47, 50, 49, 145, 170, 178), (48, 36, 28, 150, 171, 179), (49, 40, 41, 155, 173, 183), (50, 54, 63, 159, 175, 186), (51, 52, 51, 160, 177, 186), (52, 11, 19, 161, 182, 188), (53, 23, 39, 162, 185, 196), (54, 7, 6, 163, 188, 198), (55, 49, 50, 171, 188, 196), (56, 38, 31, 172, 193, 205), (57, 12, 20, 173, 189, 196), (58, 33, 25, 175, 198, 207), (59, 1, 9, 177, 196, 203), (60, 5, 4, 179, 203, 212), (61, 58, 50, 180, 200, 207), (62, 28, 29, 182, 198, 203), (63, 22, 30, 185, 207, 216), (64, 1, 9, 190, 210, 217), (65, 48, 57, 192, 210, 221), (66, 2, 1, 197, 222, 232), (67, 51, 43, 210, 233, 242), (68, 34, 42, 212, 229, 234), (69, 52, 60, 214, 234, 244), (70, 57, 56, 229, 250, 256), (71, 5, 6, 231, 249, 259), (72, 32, 41, 233, 257, 268), (73, 17, 26, 236, 259, 270), (74, 36, 44, 238, 255, 264), (75, 25, 26, 240, 259, 264), (76, 35, 43, 254, 270, 275), (77, 51, 52, 258, 279, 288), (78, 21, 13, 261, 284, 290), (79, 41, 33, 263, 278, 284), (80, 33, 34, 267, 286, 291), (81, 14, 15, 276, 295, 303), (82, 61, 62, 277, 292, 302), (83, 60, 59, 285, 310, 317), (84, 9, 0, 287, 308, 319), (85, 31, 39, 290, 312, 318), (86, 39, 38, 291, 314, 321), (87, 54, 62, 292, 308, 315), (88, 31, 30, 293, 314, 319), (89, 44, 43, 296, 318, 327), (90, 17, 16, 302, 320, 329), (91, 47, 63, 303, 323, 334), (92, 43, 44, 305, 326, 335), (93, 3, 12, 306, 324, 335), (94, 54, 63, 308, 330, 341), (95, 18, 26, 310, 335, 343), 
+(96, 17, 25, 319, 344, 350), (97, 44, 43, 321, 336, 345), (98, 13, 12, 323, 346, 356), (99, 30, 29, 324, 348, 356), (100, 18, 26, 329, 345, 353), (101, 61, 60, 333, 349, 355), (102, 35, 43, 336, 358, 363), (103, 61, 60, 337, 355, 361), (104, 50, 58, 344, 365, 372), (105, 21, 20, 345, 366, 374), (106, 29, 30, 351, 366, 374), (107, 48, 57, 355, 372, 383), (108, 45, 53, 356, 381, 386), (109, 12, 13, 359, 380, 390)]
+        driverInfo = \
+        [(0, 32, 'rateFocused'), (1, 27, 'rateFocused'), (2, 33, 'greedy'), (3, 6, 'greedy'), (4, 49, 'greedy'), (5, 43, 'rateFocused'), (6, 33, 'rateFocused'), (7, 48, 'rateFocused'), (8, 57, 'greedy'), (9, 41, 'greedy'), (10, 60, 'rateFocused'), (11, 22, 'rateFocused'), (12, 52, 'rateFocused'), (13, 60, 'greedy'), (14, 10, 'rateFocused'), (15, 60, 'greedy'), (16, 61, 'rateFocused'), (17, 9, 'rateFocused'), (18, 21, 'rateFocused'), (19, 43, 'rateFocused')]
+        orderQueue = []
+        drivers = []
+        # INIT ORDERS
+        for id, pickup, dropoff, releaseTime, pickupTime, deliverTime in orderInfo:
+            orderQueue.append(Order(id, pickup, dropoff, releaseTime, pickupTime, deliverTime, basePay))
+        # INIT DRIVERS
+        for id, start, policy in driverInfo:
+            drivers.append(Driver(id, start, policyDict[policy]))
+
+        return map, orderQueue, totalMins, drivers, basePay
+
+# TEST 12
+# LAYOUT: 8x8 GRID
+# 20 DRIVERS, 6 HOUR PERIOD   
+# FLAT RATE $5/order
+# EDGE DURATIONS RANGE (5, 10)
+# PICKUP TIME RANGE (15, 25)  
+# DELIVER TIME WIGGLE ROOM 0  
+# DROPOFF THRESHOLD 12        
+def test12():
+        n = 8
+        m = 8
+        basePay = 5 # total price will be calculated later when assigned to driver
+        totalMins = 360
+        adjMatrix = \
+        [
+ [ None,   10, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [   10, None,    5, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None,    5, None,    5, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None,    5, None,    9, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None,    9, None,    9, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None,    9, None,   10, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None,   10, None,    8, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [    5, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None,   10, None, None, None, None, None, None,   10, None,   10, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None,    8, None, None, None, None, None, None,   10, None,    9, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None,    9, None, None, None, None, None, None,    9, None,    7, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None,    7, None, None, None, None, None, None,    7, None,    8, None, None, None, None, None, None,    6, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None,    8, None, None, None, None, None, None,    8, None,    6, None, None, None, None, None, None,   10, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None,    5, None, None, None, None, None, None,    6, None,    9, None, None, None, None, None, None,    8, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None,    5, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    7, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    7, None,    6, None, None, None, None, None, None,    6, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    6, None,    9, None, None, None, None, None, None,    9, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    9, None,    6, None, None, None, None, None, None, 
+  10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    6, None,    9, None, None, None, None, None, 
+None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    9, None,    8, None, None, None, None, 
+None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    8, None,    6, None, None, None, 
+None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    6, None, None, None, None, 
+None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None,    9, None, 
+None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    9, None,    6, 
+None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    6, None, 
+  10, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,   10, 
+None,    5, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None, 
+   5, None,    5, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, 
+None,    5, None,    6, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, 
+None, None,    6, None,   10, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, 
+None, None, None,   10, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, 
+None, None, None, None, None, None,   10, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, 
+None, None, None, None, None,   10, None,    8, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, 
+None, None, None, None, None, None,    8, None,    8, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+   7, None, None, None, None, None, None,    8, None,    8, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None,   10, None, None, None, None, None, None,    8, None,    6, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None,   10, None, None, None, None, None, None,    6, None,   10, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None,    7, None, None, None, None, None, None,   10, None,    6, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None,    9, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None,    9, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None,    8, None, None, None, None, None, None,   10, None,    5, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    5, None,   10, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,   10, None,    7, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    7, None,    5, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    5, None,    9, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    9, None,    9, None, None, None, None, None, None,    
+9, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    5, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    7, None,    8, None, None, None, None, None, None,    7, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    8, None,   10, None, None, None, None, None, None,    8, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,   10, None,   10, None, None, None, None, None, None,    5, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,   10, None,   10, None, None, None, None, None, None,    9, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,   10, None,    
+7, None, None, None, None, None, None,   10, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    7, None,   10, None, None, None, None, None, None,    6, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None,   10 ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    6, None,    8, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    8, None,    8, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    8, None,    6, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    6, None,    5, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    5, None,    9, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    
+6, None, None, None, None, None, None,    9, None,    9 ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    9, None ]
+]
+        map = GridLayout(n, m, n * m, adjMatrix)
+        policyDict = { 'rateFocused' : rateFocused, 'greedy' : greedy }
+        orderInfo = \
+        [(0, 41, 40, 0, 21, 31), (1, 61, 62, 5, 21, 30), (2, 44, 53, 7, 29, 39), (3, 49, 50, 11, 30, 38), (4, 11, 3, 12, 36, 45), (5, 2, 10, 17, 35, 43), (6, 16, 17, 24, 41, 48), (7, 39, 31, 28, 52, 61), (8, 47, 39, 29, 45, 50), (9, 28, 21, 32, 55, 67), (10, 50, 49, 34, 57, 65), (11, 62, 63, 41, 56, 65), (12, 7, 6, 52, 75, 83), 
+(13, 38, 39, 54, 72, 78), (14, 25, 33, 55, 73, 80), (15, 35, 36, 62, 81, 89), (16, 31, 22, 71, 95, 106), (17, 2, 1, 72, 89, 94), (18, 35, 27, 73, 97, 104), (19, 6, 13, 74, 98, 109), (20, 6, 14, 77, 93, 98), (21, 55, 47, 85, 107, 114), (22, 17, 25, 89, 109, 115), (23, 20, 11, 90, 108, 120), (24, 34, 42, 92, 117, 126), (25, 30, 29, 93, 112, 118), (26, 45, 46, 97, 120, 129), (27, 55, 63, 99, 118, 128), (28, 50, 41, 103, 119, 130), (29, 19, 12, 105, 122, 134), (30, 20, 28, 114, 132, 141), (31, 
+22, 30, 116, 136, 144), (32, 38, 39, 120, 138, 144), (33, 20, 19, 127, 142, 148), (34, 36, 35, 130, 147, 155), (35, 61, 59, 134, 157, 168), (36, 47, 39, 137, 152, 157), (37, 45, 37, 139, 158, 165), (38, 5, 4, 141, 160, 169), (39, 28, 29, 142, 167, 172), (40, 17, 16, 148, 165, 172), (41, 25, 17, 151, 171, 177), (42, 18, 10, 158, 
+182, 191), (43, 59, 60, 159, 182, 188), (44, 8, 9, 161, 184, 194), (45, 29, 37, 163, 178, 188), (46, 52, 60, 164, 186, 195), (47, 58, 59, 178, 193, 201), (48, 52, 51, 180, 199, 209), (49, 4, 3, 182, 207, 216), (50, 55, 39, 184, 209, 221), (51, 23, 22, 187, 203, 209), (52, 31, 23, 188, 204, 209), (53, 11, 19, 190, 211, 217), (54, 9, 10, 191, 213, 223), (55, 0, 8, 196, 214, 219), (56, 56, 57, 200, 216, 222), (57, 6, 5, 201, 216, 226), (58, 50, 51, 204, 220, 230), (59, 29, 30, 208, 230, 236), 
+(60, 55, 54, 216, 239, 249), (61, 12, 20, 217, 235, 241), (62, 23, 31, 218, 243, 248), (63, 27, 26, 222, 246, 256), (64, 42, 43, 224, 243, 253), (65, 58, 50, 231, 250, 258), (66, 11, 10, 235, 253, 262), (67, 8, 9, 239, 260, 270), (68, 30, 22, 240, 256, 264), (69, 7, 15, 243, 268, 278), (70, 45, 54, 244, 267, 279), (71, 31, 15, 245, 269, 279), (72, 37, 29, 252, 267, 277), (73, 14, 6, 254, 277, 282), (74, 31, 23, 255, 279, 284), (75, 52, 60, 256, 273, 282), (76, 32, 33, 258, 282, 292), (77, 20, 19, 266, 289, 295), (78, 8, 9, 268, 284, 294), (79, 23, 15, 270, 292, 297), (80, 41, 50, 278, 293, 304), (81, 51, 50, 279, 299, 309), (82, 22, 14, 281, 299, 307), (83, 50, 42, 282, 304, 310), (84, 10, 11, 284, 303, 312), (85, 36, 37, 287, 309, 315), (86, 6, 13, 288, 306, 317), (87, 5, 6, 291, 307, 317), (88, 18, 17, 298, 321, 327), (89, 30, 31, 305, 325, 335), (90, 30, 22, 306, 325, 333), (91, 58, 50, 307, 325, 333), (92, 36, 37, 311, 333, 339), (93, 4, 12, 319, 335, 342), (94, 20, 19, 324, 347, 353), (95, 2, 3, 326, 347, 352), (96, 60, 52, 332, 352, 361), (97, 46, 45, 336, 355, 364), (98, 41, 40, 338, 363, 373), (99, 46, 45, 339, 358, 367), (100, 1, 0, 341, 360, 370), (101, 22, 15, 351, 366, 377), (102, 2, 1, 354, 375, 380)]
+        driverInfo = \
+        [(0, 0, 'rateFocused', 1.1), (1, 54, 'rateFocused', 1.0), (2, 40, 'rateFocused', 1.1), (3, 27, 'greedy', 1.1), (4, 59, 'greedy', 1.1), (5, 38, 'greedy', 0.9), (6, 0, 'rateFocused', 0.9), (7, 57, 'rateFocused', 0.9), (8, 32, 'greedy', 1.1), (9, 55, 'greedy', 1.0), (10, 16, 'rateFocused', 1.1), (11, 63, 'greedy', 1.0), (12, 35, 'greedy', 1.1), (13, 58, 'rateFocused', 0.9), (14, 9, 'greedy', 0.9), (15, 4, 'rateFocused', 1.1), (16, 47, 'rateFocused', 1.1), (17, 18, 'greedy', 0.9), (18, 
+22, 'greedy', 1.1), (19, 34, 'rateFocused', 0.9)]
+        orderQueue = []
+        drivers = []
+        # INIT ORDERS
+        for id, pickup, dropoff, releaseTime, pickupTime, deliverTime in orderInfo:
+            orderQueue.append(Order(id, pickup, dropoff, releaseTime, pickupTime, deliverTime, basePay))
+        # INIT DRIVERS
+        for id, start, policy, driverBehavior in driverInfo:
+            drivers.append(Driver(id, start, policyDict[policy], driverBehavior))
+
+        return map, orderQueue, totalMins, drivers, basePay
+
+# TEST 13
+# LAYOUT: 8x8 GRID
+# 13 DRIVERS, 6 HOUR PERIOD   
+# FLAT RATE $5/order
+# EDGE DURATIONS RANGE (5, 10)
+# PICKUP TIME RANGE (15, 25)  
+# DELIVER TIME WIGGLE ROOM 0  
+# DROPOFF THRESHOLD 12
+def test13():
+        n = 8
+        m = 8
+        basePay = 5 # total price will be calculated later when assigned to driver
+        totalMins = 360
+        adjMatrix = \
+        [
+ [ None,    5, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [    5, None,   10, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None,   10, None,    6, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None,    6, None,    5, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None,    5, None,    5, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None,    5, None,    7, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None,    7, None,    6, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [   10, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None,    9, None, None, None, None, None, None,   10, None,   10, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None,    9, None, None, None, None, None, None,   10, None,    9, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None,    5, None, None, None, None, None, None,    9, None,    5, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None,    9, None, None, None, None, None, None,    5, None,    8, None, None, None, None, None, None,    9, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None,    8, None, None, None, None, None, None,    8, None,    5, None, None, None, None, None, None,    5, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None,   10, None, None, None, None, None, None,    5, None,    7, None, None, None, None, None, None,   10, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None,    5, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    6, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    8, None,    8, None, None, None, None, None, None,    5, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    8, None,    7, None, None, None, None, None, None,    8, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    7, None,    7, None, None, None, None, None, None, 
+   7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    7, None,    9, None, None, None, None, None, 
+None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    9, None,    6, None, None, None, None, 
+None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    6, None,    5, None, None, None, 
+None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    5, None, None, None, None, 
+None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None,   10, None, 
+None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,   10, None,   10, 
+None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,   10, None, 
+   5, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    5, 
+None,   10, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None, 
+  10, None,    9, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, 
+None,    9, None,    5, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, 
+None, None,    5, None,    8, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, 
+None, None, None,    8, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, 
+None, None, None, None, None, None,    8, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, 
+None, None, None, None, None,    8, None,    6, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, 
+None, None, None, None, None, None,    6, None,    8, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+   9, None, None, None, None, None, None,    8, None,    6, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None,    9, None, None, None, None, None, None,    6, None,    6, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None,    9, None, None, None, None, None, None,    6, None,    5, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None,    5, None, None, None, None, None, None,    5, None,    8, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None,    5, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None,    5, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None,    8, None, None, None, None, None, None,    5, None,   10, None, None, None, None, None, None,    5, None, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None,   10, None, None, None, None, None, None,   10, None,    7, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    7, None,    5, None, None, None, None, None, None,    9, None, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    5, None,    8, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    8, None,    7, None, None, None, None, None, None,    7, None, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    7, None,    6, None, None, None, None, None, None,    
+9, None, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    6, None, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    7, None,    9, None, None, None, None, None, None,    8, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None,    9, None,    7, None, None, None, None, None, None,    7, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    7, None,    9, None, None, None, None, None, None,    7, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    9, None,    9, None, None, None, None, None, None,    9, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    9, None,    
+6, None, None, None, None, None, None,    7, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    6, None,    8, None, None, None, None, None, None,    7, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,   10, None, None, None, None, None, None,    
+8, None, None, None, None, None, None, None, None,    5 ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    6, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    8, None, None, None, None, None, None,    8, None,    6, None, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    6, None,    7, None, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,    7, None,    5, None, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    9, None, None, None, None, None, None,    5, None,   10, None, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    7, None, None, None, None, None, None,   10, None,    7, None ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    
+7, None, None, None, None, None, None,    7, None,    5 ],
+ [ None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 
+None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,    5, None, None, None, None, None, None,    5, None ]
+]
+        map = GridLayout(n, m, n * m, adjMatrix)
+        policyDict = { 'rateFocused' : rateFocused, 'greedy' : greedy }
+        orderInfo = \
+        [(0, 5, 6, 8, 28, 35), (1, 31, 22, 9, 29, 41), (2, 34, 35, 11, 35, 43), (3, 52, 51, 13, 32, 41), (4, 31, 39, 15, 30, 35), (5, 14, 21, 16, 34, 44), (6, 45, 38, 19, 38, 50), (7, 23, 31, 30, 55, 62), (8, 19, 26, 31, 49, 61), (9, 63, 54, 33, 52, 64), (10, 16, 24, 35, 57, 63), (11, 35, 36, 41, 63, 69), (12, 60, 61, 43, 60, 70), (13, 53, 45, 50, 74, 81), (14, 4, 6, 51, 69, 81), (15, 30, 29, 54, 73, 78), (16, 49, 40, 56, 75, 85), (17, 24, 16, 57, 74, 80), (18, 18, 17, 59, 74, 82), (19, 8, 
+0, 63, 79, 89), (20, 50, 58, 68, 86, 93), (21, 20, 19, 69, 91, 98), (22, 55, 54, 72, 88, 96), (23, 48, 41, 73, 97, 109), (24, 3, 2, 74, 92, 98), (25, 22, 23, 78, 94, 99), (26, 39, 23, 79, 95, 107), (27, 58, 60, 86, 102, 114), (28, 63, 54, 94, 114, 126), (29, 14, 23, 95, 120, 132), (30, 57, 56, 96, 114, 122), (31, 32, 40, 98, 114, 119), (32, 62, 61, 99, 122, 129), (33, 17, 18, 102, 125, 133), (34, 7, 15, 104, 129, 136), (35, 60, 61, 113, 133, 143), (36, 59, 51, 116, 133, 140), (37, 8, 16, 121, 139, 146), (38, 13, 5, 125, 147, 155), (39, 39, 31, 128, 143, 148), (40, 35, 36, 138, 155, 161), (41, 26, 27, 139, 163, 168), (42, 21, 20, 141, 166, 175), (43, 56, 57, 144, 169, 177), (44, 61, 62, 145, 165, 172), (45, 59, 60, 146, 163, 168), (46, 15, 31, 147, 162, 174), (47, 53, 61, 150, 167, 174), (48, 34, 35, 151, 167, 175), (49, 44, 36, 157, 175, 182), (50, 46, 47, 159, 177, 183), (51, 26, 18, 162, 183, 191), (52, 57, 58, 164, 189, 195), (53, 7, 15, 168, 192, 199), (54, 47, 39, 171, 189, 197), (55, 26, 34, 172, 193, 202), (56, 12, 11, 173, 191, 196), (57, 3, 5, 174, 194, 204), (58, 24, 25, 175, 192, 202), (59, 11, 2, 177, 194, 205), (60, 62, 54, 
+183, 208, 215), (61, 60, 59, 184, 206, 211), (62, 22, 30, 185, 209, 217), (63, 41, 32, 193, 214, 224), (64, 0, 8, 196, 219, 229), (65, 57, 58, 200, 223, 229), (66, 53, 61, 201, 221, 228), (67, 42, 41, 205, 227, 237), (68, 9, 17, 206, 229, 238), (69, 23, 31, 211, 226, 233), (70, 16, 8, 220, 245, 252), (71, 42, 50, 227, 244, 250), (72, 16, 17, 232, 254, 262), (73, 33, 34, 234, 253, 259), (74, 12, 3, 236, 260, 270), (75, 37, 45, 238, 263, 271), (76, 44, 52, 242, 267, 277), (77, 35, 34, 252, 267, 275), (78, 60, 61, 253, 274, 284), (79, 52, 53, 255, 280, 289), (80, 53, 54, 261, 280, 286), (81, 63, 62, 263, 286, 291), (82, 45, 38, 265, 287, 299), (83, 40, 49, 270, 294, 304), (84, 3, 12, 271, 289, 299), (85, 63, 55, 274, 298, 303), (86, 0, 8, 276, 297, 307), (87, 13, 12, 277, 296, 304), (88, 42, 43, 279, 295, 302), (89, 
+27, 19, 281, 298, 305), (90, 4, 3, 283, 300, 305), (91, 47, 38, 284, 302, 313), (92, 61, 53, 287, 310, 317), (93, 48, 41, 293, 317, 329), (94, 62, 61, 294, 315, 322), (95, 42, 34, 297, 315, 325), (96, 46, 47, 305, 324, 330), (97, 5, 13, 306, 324, 332), (98, 28, 29, 307, 324, 333), (99, 48, 41, 308, 324, 336), (100, 8, 16, 314, 338, 345), (101, 34, 26, 315, 335, 344), (102, 57, 56, 318, 336, 344), (103, 26, 19, 319, 334, 346), (104, 52, 53, 321, 342, 351), (105, 62, 61, 324, 343, 350), (106, 5, 6, 329, 353, 360), (107, 4, 5, 330, 346, 351), (108, 22, 30, 337, 359, 367), (109, 31, 30, 338, 353, 361), (110, 7, 23, 341, 358, 370), (111, 58, 59, 342, 360, 367), (112, 39, 23, 343, 361, 373), (113, 43, 35, 344, 363, 372), (114, 21, 14, 353, 376, 386), (115, 52, 44, 356, 377, 387)]
+        driverInfo = \
+        [(0, 54, 'rateFocused', 1.0), (1, 24, 'greedy', 0.9), (2, 45, 'rateFocused', 0.9), (3, 46, 'greedy', 0.9), (4, 60, 'rateFocused', 0.9), (5, 12, 'greedy', 1.0), (6, 7, 'greedy', 0.9), (7, 45, 'rateFocused', 1.1), (8, 60, 'greedy', 1.1), (9, 56, 'rateFocused', 1.1), (10, 12, 'rateFocused', 1.0), (11, 4, 'rateFocused', 1.1), (12, 18, 'greedy', 0.9)]
+        orderQueue = []
+        drivers = []
+        # INIT ORDERS
+        for id, pickup, dropoff, releaseTime, pickupTime, deliverTime in orderInfo:
+            orderQueue.append(Order(id, pickup, dropoff, releaseTime, pickupTime, deliverTime, basePay))
+        # INIT DRIVERS
+        for id, start, policy, driverBehavior in driverInfo:
+            drivers.append(Driver(id, start, policyDict[policy], driverBehavior))
+
+        return map, orderQueue, totalMins, drivers, basePay
+
 #PARAMS: testNum, n, m, basePay, numDrivers, durationRange, pickupTimeRange, orderSpawnRate, 
-# totalMins, dropoffThreshold=12, deliverTimeWiggleRoom=4
-#print(genTest(10, 12, 12, 15, 20, (5, 10), (15, 25), .3, 360))
+# totalMins, dropoffThreshold=12, deliverTimeWiggleRoom=0
+
+#print(genTest(13, 8, 8, 5, 13, (5, 10), (15, 25), .3, 360))
