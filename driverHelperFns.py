@@ -1,4 +1,6 @@
 import networkx as nx
+import math
+import statistics
 
 def getBestDriver(map, drivers, currOrder):
     bestScore = float('-inf')
@@ -72,12 +74,23 @@ def getOrderDuration(map, currLoc, orderPickup, orderDropOff):
 
     return currLocToOrderDuration, totalTime
 
+def getAvgDurs(durs):
+    currLocs = [currLoc for currLoc, _ in durs]
+    totalDurs = [totalDur for _, totalDur in durs]
+    return statistics.mean(currLocs), statistics.mean(totalDurs)
+
 def driverDecide(drivers, durs, currOrder, minute):
     remainingDrivers = []
     for i in range(len(drivers)):
         driver = drivers[i]
-        currLocToOrderDuration, totalTime = durs[i]
+        # get theoretical durs and multiply by reliability factor to get real durs
+        theoreticalCurrLocToOrderDuration, theoreticalTotalTime = durs[i]
+        theoreticalPickupToDeliverDur = theoreticalTotalTime - theoreticalCurrLocToOrderDuration
+        driverReliabilityFactor = driver.computeDriverReliabilityFactor()
+        pickupToDeliverDur = math.ceil(theoreticalPickupToDeliverDur * driverReliabilityFactor)
+        currLocToOrderDuration = math.ceil(theoreticalCurrLocToOrderDuration * driverReliabilityFactor)
+        totalTime = currLocToOrderDuration + pickupToDeliverDur
         # if driver policy accepts order add it to remaining drivers
-        if driver.policy(driver, currOrder, minute, currLocToOrderDuration, totalTime):
+        if driver.policy.policyFn(driver, currOrder, minute, currLocToOrderDuration, totalTime):
             remainingDrivers.append(driver)
     return remainingDrivers

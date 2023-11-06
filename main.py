@@ -6,16 +6,6 @@ from driverPolicies import *
 from companyPolicies import *
 import copy
 
-def driverDecide(drivers, durs, currOrder, minute):
-    remainingDrivers = []
-    for i in range(len(drivers)):
-        driver = drivers[i]
-        currLocToOrderDuration, totalTime = durs[i]
-        # if driver policy accepts order add it to remaining drivers
-        if driver.policy(driver, currOrder, minute, currLocToOrderDuration, totalTime):
-            remainingDrivers.append(driver)
-    return remainingDrivers
-
 def initSim(map, orderQueue, drivers, basePay, totalMins):
     ordersCompleted = 0
     finishedOrders = []
@@ -40,11 +30,11 @@ def initSim(map, orderQueue, drivers, basePay, totalMins):
                     driver.nonproductiveTime += 1
                 driver.reputationOverTime.append(driver.reputation)
                 
-    delayedOrders = company.finishSim()
-    return drivers, (ordersCompleted, delayedOrders, finishedOrders)
+    delayedOrders, driverLog = company.finishSim()
+    return drivers, (ordersCompleted, delayedOrders, finishedOrders, driverLog)
 
 def displayResults(drivers, orderInfo, totalMins):
-    ordersCompleted, _, _ = orderInfo
+    ordersCompleted, _, _, _ = orderInfo
     res = f'SEED: {seed}\nTEST: {testNum}\n'
     res += f'There was a total of {ordersCompleted} orders completed across all drivers.\nThe earnings for each driver are as follows:\n'
     sumOfRates = 0
@@ -58,21 +48,41 @@ def displayResults(drivers, orderInfo, totalMins):
     print(res)
     displayVisualizations(drivers, orderInfo, avgRate, totalMins)
 
+def displayOrderRoutes(map, driverLog, allOrders):
+    print(f"All completed orders: {[order.id for order in allOrders if order.driver]}")
+    print(f"All incompleted orders: {[order.id for order in allOrders if order.driver == None]}")
+
+    while True:
+        userInput = input("Please select a completed order from the above list. To see a select list of orders completed throughout the simulation, type 'L'.\nWhen you have finished, please type 'Q'.\n")
+        if userInput.upper() == 'Q': 
+            break
+        if userInput.upper() == 'L':
+            for i in range(0, len(allOrders), 10):
+                map.displayOrderRoute(driverLog, allOrders[i])
+        id = int(userInput)
+        order = None
+        for currOrder in allOrders:
+            if currOrder.id == id:
+                order = currOrder
+        map.displayOrderRoute(driverLog, order)
+
 def chooseLayout(graphType, testNum):
     if graphType == 'grid':
         map, orderQueue, totalMins, drivers, basePay = eval(f'test{testNum}()')
     allOrders = copy.copy(orderQueue)
     driversStart = copy.copy(drivers)
     drivers, orderInfo = initSim(map, orderQueue, drivers, basePay, totalMins)
+    _, _, _, driverLog = orderInfo
+    displayOrderRoutes(map, driverLog, allOrders)
     map.displayGraphDrivers(driversStart)
     map.displayGraphOrders(allOrders) 
     displayResults(drivers, orderInfo, totalMins)
 
 graphType = 'grid'
-testNum = 9
+testNum = 2
 seed = 2
 
-#NOTE: seed dictates randomness of drivers' lateness
+#NOTE: seed dictates randomness of drivers' reliability (lateness)
 random.seed(seed)
 
 chooseLayout(graphType, testNum)

@@ -35,6 +35,7 @@ class GridLayout:
                         print(f"ERROR: INVALID EDGE {node, botNeigh}")
                     G.add_edge(node, botNeigh, weight = weight)
         return G
+    
     def displayGraphDrivers(self, drivers):
         pos = {}
         colorList = ['green','red','cyan','magenta','yellow','tomato', 'orchid', 'olive','purple','lime',
@@ -42,15 +43,15 @@ class GridLayout:
         
         colorMapping = {node: 'skyblue' for node in self.G.nodes()}
 
-        label_mapping = {node: [] for node in self.G.nodes()}
+        labelMapping = {node: [] for node in self.G.nodes()}
 
         for i, driver in enumerate(drivers):
             if driver.currLoc in colorMapping:
                 colorMapping[driver.currLoc] = colorList[i % len(colorList)]
-                label_mapping[driver.currLoc].append(str(driver.id))
+                labelMapping[driver.currLoc].append(str(driver.id))
                 
-        for node in label_mapping:
-            label_mapping[node] = ','.join(label_mapping[node]) if label_mapping[node] else str(node)
+        for node in labelMapping:
+            labelMapping[node] = ','.join(labelMapping[node]) if labelMapping[node] else str(node)
 
         colors = [colorMapping[node] for node in self.G.nodes()]
 
@@ -60,10 +61,10 @@ class GridLayout:
             pos[node] = (col, -row)  
 
         plt.subplots(figsize=(15, 15)) 
-        edge_labels = nx.get_edge_attributes(self.G, 'weight')
+        edgeLabels = nx.get_edge_attributes(self.G, 'weight')
         plt.title(f'{self.m}x{self.n} Grid Simulation with Driver Start Locations') 
-        nx.draw(self.G, pos, labels=label_mapping, node_color=colors, with_labels=True, node_size=700, font_size=13)
-        nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edge_labels, font_size=12)
+        nx.draw(self.G, pos, labels=labelMapping, node_color=colors, with_labels=True, node_size=700, font_size=13)
+        nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edgeLabels, font_size=12)
         plt.show()
         
     def displayGraphOrders(self, orders):
@@ -107,6 +108,7 @@ class GridLayout:
                 ax.add_patch(Circle((x, y), 0.4, facecolor=(redShade, 0, 0), edgecolor='black', linewidth=0, zorder=2))
             else:
                 ax.add_patch(Circle((x, y), 0.4, facecolor='skyblue', edgecolor='black', linewidth=0, zorder=2))
+
         nx.draw(self.G, pos, ax=ax, with_labels=True, node_color='none', edgecolors='none', node_size=300, font_size=7)
         plt.legend([Wedge((0, 0), 1, 0, 1, facecolor='green'), Wedge((0, 0), 1, 0, 1, facecolor='red'), Circle((0, 0), color='skyblue')], 
                 ['Order Pickup', 'Order Dropoff', 'No Order'], loc="upper left")
@@ -114,6 +116,74 @@ class GridLayout:
         edgeLabels = nx.get_edge_attributes(self.G, 'weight')
         nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edgeLabels, font_size=12)
         plt.axis('equal')
+        plt.show()
+
+    def displayOrderRoute(self, driverLog, order):
+        if not order.driver:
+            print(f"ERROR: {order.id} does not have a driver\n")
+            return 
+    
+        fig, ax = plt.subplots(figsize=(15, 15))
+
+        pos = {node: (node % self.m, -(node // self.m)) for node in self.G.nodes()} 
+        
+        availableDrivers = driverLog[order.id]
+
+        fig.text(0, .9, "Available Drivers Info:", fontsize=12, ha='left', transform=fig.transFigure)
+        for i, (driver, reputation, _, acceptedDrivers) in enumerate(availableDrivers):
+            if driver.id in acceptedDrivers:
+                status = 'Accepted'
+            else:
+                status = 'Rejected'
+            driverInfo = f"Driver {driver.id}: {driver.policy}\nOrder Status: {status}\nCurrent Reputation: {reputation}"
+            fig.text(0, .9 - (i+1)*0.05, driverInfo, fontsize=9, ha='left', transform=fig.transFigure)
+
+        nodeColors = {node: 'skyblue' for node in self.G.nodes()}
+        orderDriverCurrLoc = None
+        labels = {node: str(node) for node in self.G.nodes()}
+        for (driver, _, currLoc, _) in availableDrivers:
+            if currLoc in labels:
+                labels[currLoc] = f"{driver.id}"
+            if driver.id == order.driver.id:
+                nodeColors[currLoc] = 'purple'
+                orderDriverCurrLoc = currLoc
+            else:
+                nodeColors[currLoc] = 'magenta' if currLoc != orderDriverCurrLoc else 'purple'
+
+        if orderDriverCurrLoc in labels:
+            labels[orderDriverCurrLoc] = f"{order.driver.id}"
+
+        orderRoute = nx.shortest_path(self.G, source=order.pickup, target=order.dropoff, weight = 'weight')
+        routeEdges = [(orderRoute[i], orderRoute[i+1]) for i in range(len(orderRoute)-1)]
+        
+        driverToPickupEdges = []
+        driverToPickupRoute = nx.shortest_path(self.G, source=orderDriverCurrLoc, target=order.pickup, weight = 'weight')
+        driverToPickupEdges = [(driverToPickupRoute[i], driverToPickupRoute[i+1]) for i in range(len(driverToPickupRoute)-1)]
+
+        nodeColors[order.pickup] = 'green' if order.pickup != orderDriverCurrLoc else nodeColors[order.pickup] 
+        nodeColors[order.dropoff] = 'red' if order.dropoff != orderDriverCurrLoc else nodeColors[order.dropoff]
+
+        nx.draw_networkx_nodes(self.G, pos, ax=ax, node_color=[nodeColors[node] for node in self.G.nodes()])
+        nx.draw_networkx_edges(self.G, pos, ax=ax, edgelist=driverToPickupEdges, edge_color='blue', width=2)
+        nx.draw_networkx_edges(self.G, pos, ax=ax, edgelist=routeEdges, edge_color='orange', width=2)
+        nx.draw_networkx_edges(self.G, pos, ax=ax, edgelist=set(self.G.edges()) - set(routeEdges) - set(driverToPickupEdges), edge_color='gray')
+        
+        nx.draw_networkx_labels(self.G, pos, ax=ax, labels=labels)
+        edgeLabels = nx.get_edge_attributes(self.G, 'weight')
+        nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edgeLabels, font_size=10)
+        legendElements = [
+            plt.Line2D([0], [0], color='blue', linewidth=2, label='Driver to Pickup'),
+            plt.Line2D([0], [0], color='orange', linewidth=2, label='Pickup to Dropoff'),
+            plt.Line2D([0], [0], color='magenta', marker='o', linestyle='None', markersize=5, label='Available Driver'),
+            plt.Line2D([0], [0], color='purple', marker='o', linestyle='None', markersize=5, label='Chosen Driver'),
+            plt.Line2D([0], [0], color='green', marker='o', linestyle='None', markersize=5, label='Pickup Node'),
+            plt.Line2D([0], [0], color='red', marker='o', linestyle='None', markersize=5, label='Dropoff Node')
+        ]
+        plt.legend(handles=legendElements, loc='upper left', fontsize='small')
+
+
+        plt.suptitle(f"Order Route for Order {order.id}", y = .96)
+        plt.title(f"Price accepted at: {round(order.price, 2)}\nAccepted {order.additionalCompensation} minutes after sending out to drivers\nNOTE: Some information may be hidden/overlapped by other highlighted nodes", fontsize=8)
         plt.show()
 
 # USED ONLY FOR RANDOMNESS
