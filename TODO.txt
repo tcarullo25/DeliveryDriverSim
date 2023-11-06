@@ -23,7 +23,7 @@ Week of 10/30
 6. #TODO: figure out a proper way to add and subtract from reputation now that not many people are late for deliveries
 
 Week of 11/6:
-1. #TODO: showing whether a driver accepted or rejected
+1. DONE: showing whether a driver accepted or rejected
 2. #TODO: restaurant clustering and maybe start implementing policy for drivers to head back to a cluster
 3. #TODO: run baselines for policies (after we do intermediate dests and clustering)
 4. #TODO: make sure driver warp to destination
