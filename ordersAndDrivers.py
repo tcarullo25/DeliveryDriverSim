@@ -13,6 +13,7 @@ class Order:
         self.driver = None
         self.pickedUp = False
         self.delivered = False
+        self.intermediateEdges = IntermediateEdges()
         self.lateToPickupDuration = 0 #late pickup and deliver durs accumulate only after driver assignment
         self.lateToDeliverDuration = 0
         self.delayedInAssignmentDuration = 0
@@ -24,11 +25,33 @@ class Order:
     
     def addDriver(self, driver):
         self.driver = driver
+
+class IntermediateEdges():
+    def __init__(self):
+        self.edges = []
+        self.pickupEdges = []
+        self.deliverEdges = []
+        self.currIndex = 0
+
+    def initList(self, pickupEdges, deliverEdges):
+        self.edges = pickupEdges + deliverEdges
+        self.pickupEdges = pickupEdges 
+        self.deliverEdges = deliverEdges
     
-    def __eq__(self, other):
-        if isinstance(other, Order):
-            return self.id == other.id
-        return False
+    def getScaledPickupTime(self):
+        return sum(edge[2] for edge in self.pickupEdges)
+    
+    def getScaledDeliverTime(self):
+        return sum(edge[2] for edge in self.deliverEdges)
+    
+    def passMinute(self, driver):
+        if self.currIndex >= len(self.edges): 
+            return
+        n1, n2, w = self.edges[self.currIndex]
+        self.edges[self.currIndex] = n1, n2, w - 1
+        if w - 1 <= 0:
+            self.currIndex += 1
+            driver.currLoc = n2
 
 class Driver:
     def __init__(self, id, startLoc, policy, behavior):
@@ -58,17 +81,18 @@ class Driver:
     
     def checkOrder(self, minute):
         self.currOrderTime += 1
-        #NOTE: could mark late only after a certain amount of time? (e.g. after 10 mins driver will get penalized)
-
         # have not arrived at restaurant yet
         if not self.order.pickedUp:
             self.nonproductiveTime += 1
+            self.order.intermediateEdges.passMinute(self)
             self.order.driverToPickupDur -= 1
             # pickup time passed - increase late duration
             if self.order.pickupTime < minute:
                 self.order.lateToPickupDuration += 1
         # have not delivered order yet
         if self.order.pickedUp and not self.order.delivered:
+            self.order.intermediateEdges.passMinute(self)
+            assert(self.order.intermediateEdges.currIndex >= len(self.order.intermediateEdges.pickupEdges))
             self.order.pickupToDeliverDur -= 1
             if self.order.pickupToDeliverDur <= 0:
                 self.order.delivered = True

@@ -10,7 +10,6 @@ def initSim(map, orderQueue, drivers, basePay, totalMins):
     ordersCompleted = 0
     finishedOrders = []
     company = KBestDriversPolicy()
-
     for minute in range(totalMins):
         # ORDER LOGIC #
         company.orderStep(map, orderQueue, drivers, basePay, minute)
@@ -28,7 +27,7 @@ def initSim(map, orderQueue, drivers, basePay, totalMins):
                 else:
                     driver.idleTime += 1
                     driver.nonproductiveTime += 1
-                driver.reputationOverTime.append(driver.reputation)
+                driver.reputationOverTime.append(driver.reputation)            
                 
     delayedOrders, driverLog = company.finishSim()
     return drivers, (ordersCompleted, delayedOrders, finishedOrders, driverLog)

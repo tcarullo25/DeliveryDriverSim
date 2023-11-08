@@ -36,7 +36,7 @@ class GridLayout:
                     G.add_edge(node, botNeigh, weight = weight)
         return G
     
-    def displayGraphDrivers(self, drivers):
+    def displayGraphDrivers(self, drivers, minute):
         pos = {}
         colorList = ['green','red','cyan','magenta','yellow','tomato', 'orchid', 'olive','purple','lime',
             'orange','pink', 'violet','crimson','coral','gold','silver', 'khaki','maroon','turquoise']
@@ -66,7 +66,7 @@ class GridLayout:
         nx.draw(self.G, pos, labels=labelMapping, node_color=colors, with_labels=True, node_size=700, font_size=13)
         nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edgeLabels, font_size=12)
         plt.show()
-        
+
     def displayGraphOrders(self, orders):
         pos = {}
         nodeInfo = defaultdict(lambda: {'pickup': 0, 'dropoff': 0})

@@ -24,9 +24,11 @@ Week of 10/30
 
 Week of 11/6:
 1. DONE: showing whether a driver accepted or rejected
-2. #TODO: driver should be able to have intermediate desinations each inflated/deflated by their beahvior factor and warp to each intermediate dest
+2. DONE: driver should be able to have intermediate desinations each inflated/deflated by their behavior factor and warp to each intermediate dest
 3. #TODO: restaurant clustering and maybe start implementing policy for drivers to head back to a cluster
 4. #TODO: run baselines for policies (after we do intermediate dests and clustering)
+5. NOTE: when driver decides about an order, the driver reliability factor will differ then as opposed to when we assign the driver and re compute the reliability factor
+   # because of randomness but i think this is ok?
 
 OTHER NOTES:
 #TODO: make tests look nicer and post the parameters of each test in the console output
@@ -37,8 +39,6 @@ OTHER NOTES:
 # not currently reflecting driver distance as they proceed in route
 
 # give drivers policies & name driver's by their trait to better understand data
-
-# might need to increase drivers for SelectiveBroadPolicy sinc
 
 # is there a standard python made just for imports?
 
