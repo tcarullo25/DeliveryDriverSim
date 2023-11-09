@@ -36,7 +36,7 @@ class GridLayout:
                     G.add_edge(node, botNeigh, weight = weight)
         return G
     
-    def displayGraphDrivers(self, drivers, minute):
+    def displayGraphDrivers(self, drivers):
         pos = {}
         colorList = ['green','red','cyan','magenta','yellow','tomato', 'orchid', 'olive','purple','lime',
             'orange','pink', 'violet','crimson','coral','gold','silver', 'khaki','maroon','turquoise']
@@ -129,14 +129,14 @@ class GridLayout:
         
         availableDrivers = driverLog[order.id]
 
-        fig.text(0, .9, "Available Drivers Info:", fontsize=12, ha='left', transform=fig.transFigure)
+        fig.text(0, .985, "Available Drivers Info:", fontsize=11, ha='left', transform=fig.transFigure)
         for i, (driver, reputation, _, acceptedDrivers) in enumerate(availableDrivers):
             if driver.id in acceptedDrivers:
                 status = 'Accepted'
             else:
                 status = 'Rejected'
-            driverInfo = f"Driver {driver.id}: {driver.policy}\nOrder Status: {status}\nCurrent Reputation: {reputation}"
-            fig.text(0, .9 - (i+1)*0.05, driverInfo, fontsize=9, ha='left', transform=fig.transFigure)
+            driverInfo = f"Driver {driver.id}: {driver.policy}\nOrder Status: {status}\nCluster Hover: {driver.policy.clusterHover}\nCurrent Reputation: {reputation}"
+            fig.text(0, .99 - (i+1)*0.065, driverInfo, fontsize=9, ha='left', transform=fig.transFigure)
 
         nodeColors = {node: 'skyblue' for node in self.G.nodes()}
         orderDriverCurrLoc = None

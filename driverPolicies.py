@@ -1,11 +1,12 @@
 class DriverPolicy():
-    def __init__(self, policyName, policyFn):
+    def __init__(self, policyName, policyFn, clusterHover):
         self.policyName = policyName
         self.policyFn = policyFn
+        self.clusterHover = clusterHover
 
     def __str__(self):
         return self.policyName
-    
+
 def greedy(driver, order, minute, currLocToOrderPickup, totalTime):
     return True
 

@@ -2,11 +2,22 @@ from driverHelperFns import *
 
 ## COMPANY INTERFACE ##
 class Company():
-    def __init__(self):
+    def __init__(self, clusters, map):
         self.delayedOrders = 0
         self.hourlyRate = 25
         self.driverLog = {} 
+        self.clusters = self.getCentersOfClusters(clusters, map)
 
+    def getCentersOfClusters(self, clusters, map):
+        centers = []
+        for cluster in clusters:
+            topLeft, width, height = cluster
+            centerRow = topLeft[0] + height // 2
+            centerCol = topLeft[1] + width // 2
+            centerNode = centerRow * map.m + centerCol
+            centers.append(centerNode)
+        return centers
+    
     def orderStep(self, map, orderQueue, drivers, basePay, totalMins):
         pass
 
@@ -21,8 +32,8 @@ class Company():
         return self.delayedOrders, self.driverLog
 
 class KBestDriversPolicy(Company):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, clusters, map):
+        super().__init__(clusters, map)
         self.delayedQueue = []
 
     def assignDriver(self, map, drivers, currOrder, minute, basePay):

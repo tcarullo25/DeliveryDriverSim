@@ -74,24 +74,49 @@ def getOrderDuration(map, currLoc, orderPickup, orderDropOff):
 
     return currLocToOrderDuration, totalTime
 
+def getBestCluster(map, currLoc, clusters):
+    bestCluster = None
+    bestClusterDur = None
+    for center in clusters:
+        driverToClusterCenterDur, _ = getOrderDuration(map, currLoc, center, center)
+        if bestCluster == None or driverToClusterCenterDur < bestClusterDur:
+            bestCluster = center
+            bestClusterDur = driverToClusterCenterDur
+    return bestCluster, bestClusterDur
+
+#NOTE: make setorder and setcluster into one general function 
 def setOrderIntermediateDurations(map, driverReliabilityFactor, order, currLoc, orderPickup, orderDropOff):
     currToOrderSP = nx.shortest_path(map.G, 
                     source=currLoc, target=orderPickup, weight = 'weight')
     orderToDestSP = nx.shortest_path(map.G, 
                     source=orderPickup, target=orderDropOff, weight = 'weight')
     intermediatePickupDurs = []
+    
     # currLoc -> orderPickup duration
     for i in range(1, len(currToOrderSP)):
         currNode, prevNode = currToOrderSP[i], currToOrderSP[i-1]
         scaledDuration = math.ceil(map.adjMatrix[currNode][prevNode] * driverReliabilityFactor)
         intermediatePickupDurs.append((prevNode, currNode, scaledDuration))
+
     intermediateDeliverDurs = []
+
     # orderPickup -> orderDropOff duration
     for i in range(1, len(orderToDestSP)):
         currNode, prevNode = orderToDestSP[i], orderToDestSP[i-1]
         scaledDuration = math.ceil(map.adjMatrix[currNode][prevNode] * driverReliabilityFactor)
         intermediateDeliverDurs.append((prevNode, currNode, scaledDuration))
     order.intermediateEdges.initList(intermediatePickupDurs, intermediateDeliverDurs)
+
+def setClusterIntermediateDurations(map, driver):
+    currToClusterSP = nx.shortest_path(map.G, 
+                    source=driver.currLoc, target=driver.targetedCluster, weight = 'weight')
+    driverReliabilityFactor = driver.computeDriverReliabilityFactor()
+    intermediateEdges = []
+    for i in range(1, len(currToClusterSP)):
+        currNode, prevNode = currToClusterSP[i], currToClusterSP[i-1]
+        scaledDuration = math.ceil(map.adjMatrix[currNode][prevNode] * driverReliabilityFactor)
+        intermediateEdges.append((prevNode, currNode, scaledDuration))
+    driver.intermediateEdges.edges = intermediateEdges
 
 def getAvgDurs(durs):
     currLocs = [currLoc for currLoc, _ in durs]

@@ -1,5 +1,6 @@
 import math 
 import random 
+from driverHelperFns import *
 
 class Order:
     def __init__(self, id, pickup, dropoff, releaseTime, pickupTime, deliverTime, price):
@@ -13,7 +14,7 @@ class Order:
         self.driver = None
         self.pickedUp = False
         self.delivered = False
-        self.intermediateEdges = IntermediateEdges()
+        self.intermediateEdges = OrderIntermediateEdges()
         self.lateToPickupDuration = 0 #late pickup and deliver durs accumulate only after driver assignment
         self.lateToDeliverDuration = 0
         self.delayedInAssignmentDuration = 0
@@ -29,9 +30,25 @@ class Order:
 class IntermediateEdges():
     def __init__(self):
         self.edges = []
+        self.currIndex = 0
+
+    def passMinute(self, driver):
+        if self.currIndex >= len(self.edges): return
+        n1, n2, w = self.edges[self.currIndex]
+        self.edges[self.currIndex] = n1, n2, w - 1
+        if w - 1 <= 0:
+            self.currIndex += 1
+            driver.currLoc = n2
+
+class ClusterIntermediateEdges(IntermediateEdges):
+    def __init__(self):
+        super().__init__()   
+
+class OrderIntermediateEdges(IntermediateEdges):
+    def __init__(self):
+        super().__init__()
         self.pickupEdges = []
         self.deliverEdges = []
-        self.currIndex = 0
 
     def initList(self, pickupEdges, deliverEdges):
         self.edges = pickupEdges + deliverEdges
@@ -43,15 +60,6 @@ class IntermediateEdges():
     
     def getScaledDeliverTime(self):
         return sum(edge[2] for edge in self.deliverEdges)
-    
-    def passMinute(self, driver):
-        if self.currIndex >= len(self.edges): 
-            return
-        n1, n2, w = self.edges[self.currIndex]
-        self.edges[self.currIndex] = n1, n2, w - 1
-        if w - 1 <= 0:
-            self.currIndex += 1
-            driver.currLoc = n2
 
 class Driver:
     def __init__(self, id, startLoc, policy, behavior):
@@ -65,6 +73,9 @@ class Driver:
         self.totalOrderTime  = 0
         self.currOrderTime = 0
         self.onTimeStreak = 0
+        self.intermediateEdges = ClusterIntermediateEdges()
+        self.targetedCluster = None
+        self.clusterDur = None
         self.idleTime = 0 # occurs when the driver has no order assigned
         self.nonproductiveTime = 0 # idle time + time from driver loc to order pickup
         self.reputation = 100
@@ -77,6 +88,7 @@ class Driver:
         return f'Driver {self.id}'
     
     def addOrder(self, order):
+        self.targetedCluster, self.clusterDur = None, None
         self.order = order
     
     def checkOrder(self, minute):
@@ -92,7 +104,6 @@ class Driver:
         # have not delivered order yet
         if self.order.pickedUp and not self.order.delivered:
             self.order.intermediateEdges.passMinute(self)
-            assert(self.order.intermediateEdges.currIndex >= len(self.order.intermediateEdges.pickupEdges))
             self.order.pickupToDeliverDur -= 1
             if self.order.pickupToDeliverDur <= 0:
                 self.order.delivered = True
@@ -106,8 +117,14 @@ class Driver:
                 self.order.lateToDeliverDuration += 1
         # check if order was picked up last to avoid skipping a minute of the deliver dur
         if not self.order.pickedUp and self.order.driverToPickupDur <= 0:
-                self.order.pickedUp = True
-                self.order.timePickedUpAt = minute
+            self.order.pickedUp = True
+            self.order.timePickedUpAt = minute
+
+    def moveToCluster(self, map, clusters):
+        if self.targetedCluster == None:
+            self.targetedCluster, self.clusterDur = getBestCluster(map, self.currLoc, clusters)
+            setClusterIntermediateDurations(map, self)
+        self.intermediateEdges.passMinute(self)       
 
     def completeOrder(self):
         if self.order.lateToPickupDuration:

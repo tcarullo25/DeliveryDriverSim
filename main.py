@@ -6,10 +6,10 @@ from driverPolicies import *
 from companyPolicies import *
 import copy
 
-def initSim(map, orderQueue, drivers, basePay, totalMins):
+def initSim(map, clusters, orderQueue, drivers, basePay, totalMins):
     ordersCompleted = 0
     finishedOrders = []
-    company = KBestDriversPolicy()
+    company = KBestDriversPolicy(clusters, map)
     for minute in range(totalMins):
         # ORDER LOGIC #
         company.orderStep(map, orderQueue, drivers, basePay, minute)
@@ -25,10 +25,11 @@ def initSim(map, orderQueue, drivers, basePay, totalMins):
                         driver.updateReputation()
                         driver.completeOrder()
                 else:
+                    if driver.policy.clusterHover:
+                        driver.moveToCluster(map, company.clusters)
                     driver.idleTime += 1
                     driver.nonproductiveTime += 1
                 driver.reputationOverTime.append(driver.reputation)            
-                
     delayedOrders, driverLog = company.finishSim()
     return drivers, (ordersCompleted, delayedOrders, finishedOrders, driverLog)
 
@@ -65,23 +66,21 @@ def displayOrderRoutes(map, driverLog, allOrders):
                 order = currOrder
         map.displayOrderRoute(driverLog, order)
 
-def chooseLayout(graphType, testNum):
-    if graphType == 'grid':
-        map, orderQueue, totalMins, drivers, basePay = eval(f'test{testNum}()')
+def chooseLayout(testNum):
+    map, clusters, orderQueue, totalMins, drivers, basePay = eval(f'test{testNum}()')
     allOrders = copy.copy(orderQueue)
     driversStart = copy.copy(drivers)
-    drivers, orderInfo = initSim(map, orderQueue, drivers, basePay, totalMins)
+    drivers, orderInfo = initSim(map, clusters, orderQueue, drivers, basePay, totalMins)
     _, _, _, driverLog = orderInfo
     displayOrderRoutes(map, driverLog, allOrders)
-    map.displayGraphDrivers(driversStart)
     map.displayGraphOrders(allOrders) 
+    map.displayGraphDrivers(driversStart)
     displayResults(drivers, orderInfo, totalMins)
 
-graphType = 'grid'
-testNum = 2
+testNum = 1
 seed = 2
 
 #NOTE: seed dictates randomness of drivers' reliability (lateness)
 random.seed(seed)
 
-chooseLayout(graphType, testNum)
+chooseLayout(testNum)
