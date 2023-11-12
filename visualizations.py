@@ -3,7 +3,7 @@ import mplcursors
 import numpy as np
 
 def displayVisualizations(drivers, orderInfo, avgRate, totalMins):
-    ordersCompleted, delayedOrders, finishedOrders = orderInfo
+    ordersCompleted, delayedOrders, finishedOrders, _ = orderInfo
     plotAllReputationsOverTime(drivers, totalMins)
     plotAvgReputationOverTime(drivers, totalMins)
     plotReputation(drivers)
