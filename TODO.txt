@@ -25,8 +25,8 @@ Week of 10/30
 Week of 11/6:
 1. DONE: showing whether a driver accepted or rejected
 2. DONE: driver should be able to have intermediate desinations each inflated/deflated by their behavior factor and warp to each intermediate dest
-3. #TODO: restaurant clustering and maybe start implementing policy for drivers to head back to a cluster
-4. #TODO: run baselines for policies (after we do intermediate dests and clustering)
+3. DONE: restaurant clustering and maybe start implementing policy for drivers to head back to a cluster
+4. DONE: run baselines for policies (after we do intermediate dests and clustering)
 5. NOTE: when driver decides about an order, the driver reliability factor will differ then as opposed to when we assign the driver and re compute the reliability factor
    # because of randomness but i think this is ok?
 6. #TODO: fix it so that it's not randomly chosen if it hovers
