@@ -31,6 +31,13 @@ Week of 11/6:
    # because of randomness but i think this is ok?
 6. #TODO: fix it so that it's not randomly chosen if it hovers
 
+Week of 11/13:
+# send graphs by next monday
+#shorter grace period
+# streak for lateness, penalty will increase (out of the last 10 instead of a consecutive streak)
+# convert to graph so that you can see the real length of nodes
+# make threshold for reputation focused 80
+
 OTHER NOTES:
 #TODO: make tests look nicer and post the parameters of each test in the console output
 #TODO: adding order while have a current order
