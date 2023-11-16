@@ -19,11 +19,13 @@ def rateFocused(driver, order, minute, currLocToOrderPickup, totalTime):
     return currRate >= desiredRate
 
 def reputationFocused(driver, order, minute, currLocToOrderPickup, totalTime):
-    hasDecentReputation = driver.reputation >= 70
+    hasDecentReputation = driver.reputation >= 80
     # if driver is late to either pickup or delivery, must have decent reputation to accept order
 
-    if minute + currLocToOrderPickup > order.pickupTime and not hasDecentReputation: return False
-    if minute + totalTime > order.deliverTime and not hasDecentReputation: return False
+    if minute + currLocToOrderPickup > order.pickupTime and not hasDecentReputation: 
+        return False
+    if minute + totalTime > order.deliverTime and not hasDecentReputation: 
+        return False
     # otherwise accept order
     return True
 

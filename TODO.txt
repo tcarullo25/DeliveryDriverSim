@@ -32,11 +32,14 @@ Week of 11/6:
 6. #TODO: fix it so that it's not randomly chosen if it hovers
 
 Week of 11/13:
-# send graphs by next monday
-#shorter grace period
-# streak for lateness, penalty will increase (out of the last 10 instead of a consecutive streak)
-# convert to graph so that you can see the real length of nodes
-# make threshold for reputation focused 80
+1. DONE: send graphs by next monday
+2. DONE: shorter grace period
+3. DONE: streak for lateness, penalty will increase (out of the last 10 instead of a consecutive streak)
+4. #TODO: convert to graph so that you can see the real length of nodes
+5. DONE: make threshold for reputation focused 80
+6. DONE: make better test case where deliveries are further away from restaurant
+7. NOTE: maybe make reputation similar to how the on time percentage is in door dash
+
 
 OTHER NOTES:
 #TODO: make tests look nicer and post the parameters of each test in the console output

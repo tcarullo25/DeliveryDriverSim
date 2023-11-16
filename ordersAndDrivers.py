@@ -83,6 +83,7 @@ class Driver:
         self.orderTimes = []
         self.latePickupOrders = []
         self.lateDeliverOrders = []
+        self.latenessHistory = [] # stores bool for every order signifying if late or not
     
     def __str__(self):
         return f'Driver {self.id}'
@@ -140,28 +141,44 @@ class Driver:
         self.order = None
     
     def updateReputation(self):
-        maxPenalty = 10
+        maxPenalty = 20
         maxLateness = 15 # driver will get the max penalty if lateness >= to this threshold
         base = maxLateness**(1/maxPenalty) # base to scale wrt maxLateness & maxPenalty
-        gracePeriod = 5
-        baseIncrease = 2
-        # NOTE: should the on time streak be one value for both pickup & deliver or two diff ones?
+        gracePeriod = 2
+        baseReward = 2
+        frequencyPenaltyFactor = 0.5
+       
+
+        if self.order.lateToPickupDuration > gracePeriod or self.order.lateToDeliverDuration > gracePeriod:
+            self.latenessHistory.append(True)
+        else:
+            self.latenessHistory.append(False)
+        # keep track of the number of late orders from last 10 orders
+        if len(self.latenessHistory) > 10:
+            self.latenessHistory.pop(0)
+        lateOrdersInWindow = self.latenessHistory.count(True)
+
         if self.order.lateToPickupDuration > 0:
             self.onTimeStreak = 0
         if self.order.lateToPickupDuration > gracePeriod: 
-            self.reputation -= min(math.log(self.order.lateToPickupDuration, base), maxPenalty) 
+            # penalty is function of how late they + their lateness history
+            individualPenalty = min(math.log(self.order.lateToPickupDuration, base), maxPenalty)
+            frequencyPenalty = frequencyPenaltyFactor * math.log(lateOrdersInWindow + 1, base)
+            self.reputation -= frequencyPenalty + individualPenalty
         elif not self.order.lateToPickupDuration:
             self.onTimeStreak += 1
-            self.reputation += baseIncrease * math.log(self.onTimeStreak + 1)
+            self.reputation += baseReward * math.log(self.onTimeStreak + 1)
         
         self.reputation = max(min(self.reputation, 100), 0)
         if self.order.lateToDeliverDuration > 0:
             self.onTimeStreak = 0
         if self.order.lateToDeliverDuration > gracePeriod:
-            self.reputation -= min(math.log(self.order.lateToDeliverDuration, base), maxPenalty)
+            individualPenalty = min(math.log(self.order.lateToDeliverDuration, base), maxPenalty)
+            frequencyPenalty = frequencyPenaltyFactor * math.log(lateOrdersInWindow + 1, base)
+            self.reputation -= frequencyPenalty + individualPenalty
         elif not self.order.lateToDeliverDuration:
             self.onTimeStreak += 1
-            self.reputation += baseIncrease * math.log(self.onTimeStreak + 1)
+            self.reputation += baseReward * math.log(self.onTimeStreak + 1)
 
         self.reputation = max(min(self.reputation, 100), 0)
         self.reputation = round(self.reputation, 2)

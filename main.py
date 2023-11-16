@@ -72,12 +72,12 @@ def chooseLayout(testNum):
     driversStart = copy.copy(drivers)
     drivers, orderInfo = initSim(map, clusters, orderQueue, drivers, basePay, totalMins)
     _, _, _, driverLog = orderInfo
-    displayOrderRoutes(map, driverLog, allOrders)
-    map.displayGraphOrders(allOrders) 
-    map.displayGraphDrivers(driversStart)
+    #displayOrderRoutes(map, driverLog, allOrders)
+    #map.displayGraphOrders(allOrders) 
+    #map.displayGraphDrivers(driversStart)
     displayResults(drivers, orderInfo, totalMins)
 
-testNum = 1
+testNum = 2
 seed = 2
 
 #NOTE: seed dictates randomness of drivers' reliability (lateness)
