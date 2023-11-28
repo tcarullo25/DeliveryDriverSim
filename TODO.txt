@@ -40,11 +40,23 @@ Week of 11/13:
 6. DONE: make better test case where deliveries are further away from restaurant
 7. NOTE: maybe make reputation similar to how the on time percentage is in door dash
 
+Week of 11/27:
+1. #TODO: work on presentation
+2. #TODO: keep metric of how many orders are serviced total
+3. #TODO: keep metric of average over only accepted trips (driver earnings / (totalActriveMInsforthisdriver/ 60))
+NOTES: 
+-just staying busy matters? greedy with highest $
+-orders may not have much difference (might all be the same price roughly)
+-rate focused too selective
+
+
 
 OTHER NOTES:
 #TODO: make tests look nicer and post the parameters of each test in the console output
 #TODO: adding order while have a current order
 #TODO: work on finding a good balance/equilibrium between # drivers and order spawn rate
+#TODO: keep in mind acceptance rate in addition to pick up and delivery lateness for reputation 
+      (also can just make lateness a proportion of the amount of orders that are late?)
 # if we start to access a driver's currloc to order duration and totaltime a lot thru getOrderDuration, store these values
 
 # not currently reflecting driver distance as they proceed in route
