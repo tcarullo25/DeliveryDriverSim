@@ -122,10 +122,6 @@ def genTest(testNum, n, m, basePay, numDrivers, durationRange, pickupTimeRange, 
             pickupSpot = random.choice(clusterSpots[selectedCluster])
             pickupRow, pickupCol = pickupSpot
             pickup = pickupRow * m + pickupCol
-            #(topLeftRow, topLeftCol), clusterWidth, clusterHeight = cluster
-            #pickupRow = topLeftRow + random.randint(0, clusterHeight - 1)
-            #pickupCol = topLeftCol + random.randint(0, clusterWidth - 1)
-            #pickup = pickupRow * m + pickupCol
 
             dropoff = genDropoff(randomMap, pickup, dropoffThreshold)
             if dropoff == None: # could not meet threshold, exit

@@ -49,6 +49,34 @@ NOTES:
 -orders may not have much difference (might all be the same price roughly)
 -rate focused too selective
 
+-powerpoint custom - fill in the inches yourselves
+-https://computing.cs.cmu.edu/desktop/printing-posters
+goal - to figure out a driver policy such that you can maximize profit in the long-term
+technical approach (aka simulation environment) - what you developed (simulation, explain how it works)
+experimental design - (explain policies, clusters, test each policy as a baseline)
+analysis 
+flow chart for simulation high level approach 
+preliminary results, still a wip
+
+figure out a way to represent the results that are more graphical or to the point
+bullets to explain the commonalities among the three
+reduce the text
+
+greedy did better over all because they were busy more often
+
+in the future, we can look for a equilibrium for both rate focused and reputation focused
+
+if there were more densely released orders (orders coming in right next to each other instead of being more sparselyt spawned in)
+, the tradeoff would be more valuable, 
+might have better results for rate-focused/reputation-focused
+this will give the notion of having a cost assigned to taking an order which is
+the weaakness of greed y
+
+orders per drive r- if there were more orders, greedy would have a higher dispiraitty
+in orders than the other two
+
+
+
 
 
 OTHER NOTES:

@@ -37,16 +37,19 @@ def displayResults(drivers, orderInfo, totalMins):
     ordersCompleted, _, _, _ = orderInfo
     res = f'SEED: {seed}\nTEST: {testNum}\n'
     res += f'There was a total of {ordersCompleted} orders completed across all drivers.\nThe earnings for each driver are as follows:\n'
-    sumOfRates = 0
+    sumOfRates = sumOfRatesActiveTime = 0
     for driver in drivers:
         driver.earnings = round(driver.earnings, 2)
         driverRate = driver.earnings / (totalMins/60)
+        driverRateActiveTime = driver.earnings / (driver.totalOrderTime/60)
         sumOfRates += driverRate
+        sumOfRatesActiveTime += driverRateActiveTime
         res += f'• Driver {driver.id} received ${driver.earnings}, completed {driver.totalOrders} orders and it took them {driver.totalOrderTime} timesteps with a reputation of {driver.reputation}.\n'
     avgRate = round(sumOfRates/len(drivers),2)
-    res += f'The average wage across all drivers is: ${avgRate}/hr'
+    avgRateActiveTime = round(sumOfRatesActiveTime/len(drivers),2)
+    res += f'The average wage across all drivers is: ${avgRate}/hr\nThe average wage across all drivers counting only their active time is ${avgRateActiveTime}/hr'
     print(res)
-    displayVisualizations(drivers, orderInfo, avgRate, totalMins)
+    displayVisualizations(drivers, orderInfo, avgRate, avgRateActiveTime, totalMins)
 
 def displayOrderRoutes(map, driverLog, allOrders):
     print(f"All completed orders: {[order.id for order in allOrders if order.driver]}")
@@ -72,9 +75,9 @@ def chooseLayout(testNum):
     driversStart = copy.copy(drivers)
     drivers, orderInfo = initSim(map, clusters, orderQueue, drivers, basePay, totalMins)
     _, _, _, driverLog = orderInfo
-    #displayOrderRoutes(map, driverLog, allOrders)
-    #map.displayGraphOrders(allOrders) 
-    #map.displayGraphDrivers(driversStart)
+    displayOrderRoutes(map, driverLog, allOrders)
+    map.displayGraphOrders(allOrders) 
+    map.displayGraphDrivers(driversStart)
     displayResults(drivers, orderInfo, totalMins)
 
 testNum = 2
