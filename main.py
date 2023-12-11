@@ -2,129 +2,18 @@ from graphs import *
 from ordersAndDrivers import * 
 from tests import *
 from visualizations import *
-from policies import *
+from driverPolicies import *
+from companyPolicies import *
+import copy
 
-def getOrderDuration(map, currLoc, orderPickup, orderDropOff):
-    currToOrderSP = nx.shortest_path(map.G, 
-                    source=currLoc, target=orderPickup, weight = 'weight')
-    orderToDestSP = nx.shortest_path(map.G, 
-                    source=orderPickup, target=orderDropOff, weight = 'weight')
-    totalTime = 0
-    currLocToOrderDuration = 0
-
-    # currLoc -> orderPickup duration
-    for i in range(1, len(currToOrderSP)):
-        currNode, prevNode = currToOrderSP[i], currToOrderSP[i-1]
-        duration = map.adjMatrix[currNode][prevNode]
-        totalTime += duration
-
-    currLocToOrderDuration = totalTime
-
-    # orderPickup -> orderDropOff duration
-    for i in range(1, len(orderToDestSP)):
-        currNode, prevNode = orderToDestSP[i], orderToDestSP[i-1]
-        duration = map.adjMatrix[currNode][prevNode]
-        totalTime += duration
-
-    return currLocToOrderDuration, totalTime
-
-def getFurthestDriverDuration(map, drivers, currOrder):
-    furthestDur = None
-    for driver in drivers:
-        currLocToOrderDuration, _ = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
-        if furthestDur == None or currLocToOrderDuration > furthestDur:
-            furthestDur = currLocToOrderDuration
-    return furthestDur
-
-def getKBestDrivers(map, drivers, currOrder, k=5):
-    best = []
-    maxDuration = getFurthestDriverDuration(map, drivers, currOrder)
-    for driver in drivers:
-        currLocToOrderDuration, totalTime = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
-        score = driver.computeDriverOrderScore(currLocToOrderDuration, maxDuration)
-        best.append((driver, score, (currLocToOrderDuration, totalTime)))
-
-    bestSorted = sorted(best, key=lambda x: x[1], reverse=True)
-    bestSorted = bestSorted[:k]
-    bestDrivers = []
-    bestDurs = []
-    
-    for driver, _, (currLocToOrderDuration, totalTime) in bestSorted:
-        bestDrivers.append(driver)
-        bestDurs.append((currLocToOrderDuration, totalTime))
-    return bestDrivers, bestDurs
-
-def getBestDriver(map, drivers, currOrder):
-    bestScore = float('-inf')
-    bestDriver = None
-    bestDur = None
-    maxDuration = getFurthestDriverDuration(map, drivers, currOrder)
-    for driver in drivers:
-        currLocToOrderDuration, totalTime = getOrderDuration(map, driver.currLoc, currOrder.pickup, currOrder.dropoff)
-        score = driver.computeDriverOrderScore(currLocToOrderDuration, maxDuration)
-        if score > bestScore:
-            bestScore = score
-            bestDriver = driver
-            bestDur = currLocToOrderDuration, totalTime 
-    return bestDriver, bestDur
-
-def getAvailableDrivers(drivers):
-    availableDrivers = []
-    for driver in drivers:
-        if driver.order == None:
-            availableDrivers.append(driver)
-    return availableDrivers
-
-def driverDecide(drivers, durs, currOrder, minute):
-    remainingDrivers = []
-    for i in range(len(drivers)):
-        driver = drivers[i]
-        currLocToOrderDuration, totalTime = durs[i]
-        # if driver policy accepts order add it to remaining drivers
-        if driver.policy(driver, currOrder, minute, currLocToOrderDuration, totalTime):
-            remainingDrivers.append(driver)
-
-    return remainingDrivers
-
-def initSim(map, orderQueue, drivers, totalMins):
-    # keep track of order info for data visualizations
+def initSim(map, clusters, orderQueue, drivers, basePay, totalMins):
     ordersCompleted = 0
-    delayedOrders = 0
     finishedOrders = []
-    # flat rate added to base pay for every order
-    hourlyRate = 25
-
+    company = KBestDriversPolicy(clusters, map)
     for minute in range(totalMins):
-        # ORDER ASSIGNMENT LOGIC #
-        # peek at next order in queue to see if it's ready to release
-        if orderQueue and orderQueue[0].releaseTime <= minute:
-            currOrder = orderQueue[0]
-            availableDrivers = getAvailableDrivers(drivers)
-            # can only assign order if there is an open driver
-            if availableDrivers:
-                currOrder = orderQueue.pop(0)
-                # get all potential best drivers
-                bestDrivers, bestDurs = getKBestDrivers(map, availableDrivers, currOrder)
-                # see who accepts 
-                #NOTE: what if nobody accepts????
-                remainingDrivers = driverDecide(bestDrivers, bestDurs, currOrder, minute)
-                # get the best driver out of the previous best who accepted order
-                #NOTE: the best driver will be in terms of JUST the remaining drivers (the max duration likely changed), so the answer may slightly vary from what the single-most best driver was before
-                bestDriver, (currLocToOrderPickup, totalDuration) = getBestDriver(map, remainingDrivers, currOrder)
-                # the order's price will be the lower of base pay or rate calculated from pickup to dropoff duration
-                # NOTE: are we sure we dont want to add the rate to base pay?
-                rate = min(currOrder.price, hourlyRate * ((totalDuration - currLocToOrderPickup)/60))
-                currOrder.price = rate
-                driverReliabilityFactor = bestDriver.computeDriverReliabilityFactor()
-                currOrder.driverToPickupDur = currLocToOrderPickup * driverReliabilityFactor
-                pickupToDeliverDur = totalDuration - currLocToOrderPickup
-                currOrder.pickupToDeliverDur = pickupToDeliverDur * driverReliabilityFactor
-                bestDriver.addOrder(currOrder)
-            else:
-                # if not already delayed
-                if orderQueue[0].delayedInAssignmentDuration == 0:
-                    delayedOrders += 1
-                orderQueue[0].delayedInAssignmentDuration += 1
+        # ORDER LOGIC #
+        company.orderStep(map, orderQueue, drivers, basePay, minute)
+
         # DRIVER LOGIC #
         for driver in drivers:
                 if driver.order != None:
@@ -136,39 +25,65 @@ def initSim(map, orderQueue, drivers, totalMins):
                         driver.updateReputation()
                         driver.completeOrder()
                 else:
+                    if driver.policy.clusterHover:
+                        driver.moveToCluster(map, company.clusters)
                     driver.idleTime += 1
                     driver.nonproductiveTime += 1
-                driver.reputationOverTime.append(driver.reputation)
-
-    return drivers, (ordersCompleted, delayedOrders, finishedOrders)
+                driver.reputationOverTime.append(driver.reputation)            
+    delayedOrders, driverLog = company.finishSim()
+    return drivers, (ordersCompleted, delayedOrders, finishedOrders, driverLog)
 
 def displayResults(drivers, orderInfo, totalMins):
-    ordersCompleted, _, _ = orderInfo
+    ordersCompleted, _, _, _ = orderInfo
     res = f'SEED: {seed}\nTEST: {testNum}\n'
     res += f'There was a total of {ordersCompleted} orders completed across all drivers.\nThe earnings for each driver are as follows:\n'
-    sumOfRates = 0
+    sumOfRates = sumOfRatesActiveTime = 0
     for driver in drivers:
         driver.earnings = round(driver.earnings, 2)
         driverRate = driver.earnings / (totalMins/60)
+        driverRateActiveTime = driver.earnings / (driver.totalOrderTime/60)
         sumOfRates += driverRate
+        sumOfRatesActiveTime += driverRateActiveTime
         res += f'• Driver {driver.id} received ${driver.earnings}, completed {driver.totalOrders} orders and it took them {driver.totalOrderTime} timesteps with a reputation of {driver.reputation}.\n'
     avgRate = round(sumOfRates/len(drivers),2)
-    res += f'The average wage across all drivers is: ${avgRate}/hr'
+    avgRateActiveTime = round(sumOfRatesActiveTime/len(drivers),2)
+    res += f'The average wage across all drivers is: ${avgRate}/hr\nThe average wage across all drivers counting only their active time is ${avgRateActiveTime}/hr'
     print(res)
-    displayVisualizations(drivers, orderInfo, avgRate, totalMins)
+    displayVisualizations(drivers, orderInfo, avgRate, avgRateActiveTime, totalMins)
 
-def chooseLayout(graphType, testNum):
-    if graphType == 'grid':
-        map, orderQueue, totalMins, drivers = eval(f'test{testNum}()')
+def displayOrderRoutes(map, driverLog, allOrders):
+    print(f"All completed orders: {[order.id for order in allOrders if order.driver]}")
+    print(f"All incompleted orders: {[order.id for order in allOrders if order.driver == None]}")
 
-    drivers, orderInfo = initSim(map, orderQueue,  drivers, totalMins)
+    while True:
+        userInput = input("Please select a completed order from the above list. To see a select list of orders completed throughout the simulation, type 'L'.\nWhen you have finished, please type 'Q'.\n")
+        if userInput.upper() == 'Q': 
+            break
+        if userInput.upper() == 'L':
+            for i in range(0, len(allOrders), 10):
+                map.displayOrderRoute(driverLog, allOrders[i])
+        id = int(userInput)
+        order = None
+        for currOrder in allOrders:
+            if currOrder.id == id:
+                order = currOrder
+        map.displayOrderRoute(driverLog, order)
+
+def chooseLayout(testNum):
+    map, clusters, orderQueue, totalMins, drivers, basePay = eval(f'test{testNum}()')
+    allOrders = copy.copy(orderQueue)
+    driversStart = copy.copy(drivers)
+    drivers, orderInfo = initSim(map, clusters, orderQueue, drivers, basePay, totalMins)
+    _, _, _, driverLog = orderInfo
+    displayOrderRoutes(map, driverLog, allOrders)
+    map.displayGraphOrders(allOrders) 
+    map.displayGraphDrivers(driversStart)
     displayResults(drivers, orderInfo, totalMins)
 
-graphType = 'grid'
-testNum = 9
-seed = 1
+testNum = 2
+seed = 2
 
-#NOTE: seed dictates randomness of drivers' lateness
+#NOTE: seed dictates randomness of drivers' reliability (lateness)
 random.seed(seed)
 
-chooseLayout(graphType, testNum)
+chooseLayout(testNum)

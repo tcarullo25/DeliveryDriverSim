@@ -9,22 +9,88 @@ Week of 10/9
    NOTE: because most people are late very often, everyone's reputation will be low
    
 Week of 10/23
-1. #TODO: send out order to top n drivers, figure out which driver will take it, if multiple, then take the best one
+1. DONE: send out order to top n drivers, figure out which driver will take it, if multiple, then take the best one
   driver policies: accept all (greedy), some driver calculation
-2. #TODO: company policies
-3. #TODO: (display test cases) draw graph of nodes to see where pickups and dropoffs are 
+2. DONE: company policies
+3. DONE: (display test cases) draw graph of nodes to see where pickups and dropoffs are 
+
+Week of 10/30
+1. DONE: change reliability factor function to have preset behavior factor (e.g. (1.1, 1.0, .9) + w2 * random.uniform(-1, 1))
+2. DONE: change currloctorderpicup and totaltime to behavior factored times in rep policy
+3. DONE: dont penalize driver twice for being late if elapsed time <= deliver time
+4. DONE: display vehicles around order (that are not busy), order route, & vehicle chosen
+5. DONE: in updatereputation keep track of number of consecutive orders on time previously
+6. #TODO: figure out a proper way to add and subtract from reputation now that not many people are late for deliveries
+
+Week of 11/6:
+1. DONE: showing whether a driver accepted or rejected
+2. DONE: driver should be able to have intermediate desinations each inflated/deflated by their behavior factor and warp to each intermediate dest
+3. DONE: restaurant clustering and maybe start implementing policy for drivers to head back to a cluster
+4. DONE: run baselines for policies (after we do intermediate dests and clustering)
+5. NOTE: when driver decides about an order, the driver reliability factor will differ then as opposed to when we assign the driver and re compute the reliability factor
+   # because of randomness but i think this is ok?
+6. #TODO: fix it so that it's not randomly chosen if it hovers
+
+Week of 11/13:
+1. DONE: send graphs by next monday
+2. DONE: shorter grace period
+3. DONE: streak for lateness, penalty will increase (out of the last 10 instead of a consecutive streak)
+4. #TODO: convert to graph so that you can see the real length of nodes
+5. DONE: make threshold for reputation focused 80
+6. DONE: make better test case where deliveries are further away from restaurant
+7. NOTE: maybe make reputation similar to how the on time percentage is in door dash
+
+Week of 11/27:
+1. #TODO: work on presentation
+2. #TODO: keep metric of how many orders are serviced total
+3. #TODO: keep metric of average over only accepted trips (driver earnings / (totalActriveMInsforthisdriver/ 60))
+NOTES: 
+-just staying busy matters? greedy with highest $
+-orders may not have much difference (might all be the same price roughly)
+-rate focused too selective
+
+-powerpoint custom - fill in the inches yourselves
+-https://computing.cs.cmu.edu/desktop/printing-posters
+goal - to figure out a driver policy such that you can maximize profit in the long-term
+technical approach (aka simulation environment) - what you developed (simulation, explain how it works)
+experimental design - (explain policies, clusters, test each policy as a baseline)
+analysis 
+flow chart for simulation high level approach 
+preliminary results, still a wip
+
+figure out a way to represent the results that are more graphical or to the point
+bullets to explain the commonalities among the three
+reduce the text
+
+greedy did better over all because they were busy more often
+
+in the future, we can look for a equilibrium for both rate focused and reputation focused
+
+if there were more densely released orders (orders coming in right next to each other instead of being more sparselyt spawned in)
+, the tradeoff would be more valuable, 
+might have better results for rate-focused/reputation-focused
+this will give the notion of having a cost assigned to taking an order which is
+the weaakness of greed y
+
+orders per drive r- if there were more orders, greedy would have a higher dispiraitty
+in orders than the other two
+
+
+
+
 
 OTHER NOTES:
 #TODO: make tests look nicer and post the parameters of each test in the console output
 #TODO: adding order while have a current order
 #TODO: work on finding a good balance/equilibrium between # drivers and order spawn rate
+#TODO: keep in mind acceptance rate in addition to pick up and delivery lateness for reputation 
+      (also can just make lateness a proportion of the amount of orders that are late?)
 # if we start to access a driver's currloc to order duration and totaltime a lot thru getOrderDuration, store these values
 
 # not currently reflecting driver distance as they proceed in route
 
-# if order is overdue, increase price ? 
-
 # give drivers policies & name driver's by their trait to better understand data
 
-# order objects should have the price of the actual order, then tip should be calculated from that and added to base pay
-# flat fee should be a separate parameter (like a base pay)
+# is there a standard python made just for imports?
+
+ 
