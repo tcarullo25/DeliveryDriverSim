@@ -118,7 +118,7 @@ class GridLayout:
         plt.axis('equal')
         plt.show()
 
-    def displayOrderRoute(self, driverLog, order):
+    def displayOrderRoute(self, orderLog, order):
         if not order.driver:
             print(f"ERROR: {order.id} does not have a driver\n")
             return 
@@ -127,7 +127,7 @@ class GridLayout:
 
         pos = {node: (node % self.m, -(node // self.m)) for node in self.G.nodes()} 
         
-        availableDrivers = driverLog[order.id]
+        availableDrivers = orderLog[order.id]
 
         fig.text(0, .985, "Available Drivers Info:", fontsize=11, ha='left', transform=fig.transFigure)
         for i, (driver, reputation, _, acceptedDrivers) in enumerate(availableDrivers):

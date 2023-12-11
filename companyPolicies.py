@@ -2,10 +2,11 @@ from driverHelperFns import *
 
 ## COMPANY INTERFACE ##
 class Company():
-    def __init__(self, clusters, map):
+    def __init__(self, clusters, map, totalMins):
         self.delayedOrders = 0
         self.hourlyRate = 25
-        self.driverLog = {} 
+        self.orderLog = {} 
+        self.driverLog = [None for _ in range(totalMins)]
         self.clusters = self.getCentersOfClusters(clusters, map)
 
     def getCentersOfClusters(self, clusters, map):
@@ -29,11 +30,11 @@ class Company():
                 order.delayedInAssignmentDuration += 1
 
     def finishSim(self):
-        return self.delayedOrders, self.driverLog
+        return self.delayedOrders, self.orderLog, self.driverLog
 
 class KBestDriversPolicy(Company):
-    def __init__(self, clusters, map):
-        super().__init__(clusters, map)
+    def __init__(self, clusters, map, totalMins):
+        super().__init__(clusters, map, totalMins)
         self.delayedQueue = []
 
     def assignDriver(self, map, drivers, currOrder, minute, basePay):
@@ -48,7 +49,7 @@ class KBestDriversPolicy(Company):
             self.delayedQueue.append((currOrder, bestDrivers, bestDurs))
         else:
             acceptedDrivers = [acceptedDriver.id for acceptedDriver in remainingDrivers]
-            self.driverLog[currOrder.id] = [(driver, driver.reputation, driver.currLoc, acceptedDrivers) for driver in drivers]
+            self.orderLog[currOrder.id] = [(driver, driver.reputation, driver.currLoc, acceptedDrivers) for driver in drivers]
         # get the best driver out of the previous best drivers who accepted order
         #NOTE: the best driver will be in terms of JUST the remaining drivers (the max duration likely changed), 
         # so the answer may slightly vary from what the single-most best driver was before
@@ -80,7 +81,7 @@ class KBestDriversPolicy(Company):
                 newDelayedQueue.append((order, delayedBestDrivers, bestDurs))
             else:
                 acceptedDrivers = [acceptedDriver.id for acceptedDriver in delayedRemainingDrivers]
-                self.driverLog[order.id] = [(driver, driver.reputation, driver.currLoc, acceptedDrivers) for driver in delayedBestDrivers]
+                self.orderLog[order.id] = [(driver, driver.reputation, driver.currLoc, acceptedDrivers) for driver in delayedBestDrivers]
                 bestDriver, (currLocToOrderPickup, totalDuration) = getBestDriver(map, delayedRemainingDrivers, order)
                 rate = min(basePay, self.hourlyRate * ((totalDuration - currLocToOrderPickup)/60))
                 # NOTE: make this code a helper fxn?
