@@ -20,7 +20,7 @@ def initSim(map, clusters, orderQueue, drivers, basePay, totalMins):
         for driver in drivers:
                 if driver.order != None:
                     driver.checkOrder(minute)
-                    orderInfo = (driver.order, driver.order.price)
+                    orderInfo = (driver.order, driver.order.price, driver.order.pickedUp, driver.order.delivered)
                     # check if completed order and if so reflect driver's status
                     if driver.order.delivered:
                         ordersCompleted += 1
@@ -33,7 +33,7 @@ def initSim(map, clusters, orderQueue, drivers, basePay, totalMins):
                         driver.moveToCluster(map, company.clusters)
                     driver.idleTime += 1
                     driver.nonproductiveTime += 1
-                    orderInfo = (None, None)
+                    orderInfo = None 
 
                 company.driverLog[minute] = [[driver.id, driver.currLoc, orderInfo, driver.earnings, driver.reputation] for driver in drivers]
                 # wont need this reputation over time because of driver log
@@ -95,6 +95,7 @@ def onAppStart(app):
     app.clusters = clusters
     app.orderQueue = orderQueue
     app.orders = allOrders
+    app.orderStatuses = [(False, False) for _ in range(len(app.orders ))]
     app.totalMins = totalMins
     app.drivers = drivers
     app.basePay = basePay
@@ -109,11 +110,23 @@ def onAppStart(app):
 #def onStep(app):
 #    if app.currMin < app.totalMins - 1:
 #        app.currMin += 1
+#        updateCompletedOrders(app)
+
 def onKeyPress(app, key):
     if key.lower() == 'up':
         app.currMin += 1
     if key.lower() == 'down':
         app.currMin -= 1
+    updateCompletedOrders(app)
+
+def updateCompletedOrders(app):
+    currLog = app.driverLog[app.currMin]
+    for i in range(len(app.drivers)):
+        if currLog[i][2] != None:
+            orderId = currLog[i][0] 
+            if orderId == 2:
+                print(app.orderStatuses[orderId] )
+            app.orderStatuses[orderId] = currLog[i][2][2], currLog[i][2][3]
 
 def redrawAll(app):
     drawGrid(app)
@@ -124,28 +137,36 @@ def drawGrid(app):
     for row in range(app.rows):
         for col in range(app.cols):
             cell = col + app.cols * row
-            color = ''
-            text = ''
-            for order in app.orders:
-                if order.pickup == cell:
-                    color = 'darkRed'
-                    text = order.id
-                elif order.dropoff == cell:
-                    color = 'darkGreen'
-                    text = order.id
-            drawCell(app, row, col, color if color != '' else None, text)
-            count = 0
-            color = ''
-            ids = []
-            for i in range(len(app.drivers)):
-                driverLoc = currLog[i][1]
-                if driverLoc == cell:
-                    color += app.driverColors[currLog[i][0] % len(app.driverColors)] + ' '
-                    count += 1
-                    ids.append(currLog[i][0])
-            if count > 0:
-                drawDriver(app, row, col, color[:-1].split() if color != '' else None, count, ids)
-            
+            drawOrders(app, row, col, cell)
+            drawDrivers(app, row, col, cell, currLog)
+
+def drawOrders(app, row, col, cell):
+    count = 0
+    color = ''
+    text = ''
+    for order in app.orders:
+        if order.pickup == cell or order.dropoff == cell: count += 1
+        if order.pickup == cell:
+            color = 'lightGreen' if app.orderStatuses[order.id][0] else 'darkRed' 
+            text = order.id
+        elif order.dropoff == cell:
+            color = 'lightGreen' if app.orderStatuses[order.id][1] else 'darkGreen'
+            text = order.id
+    drawCell(app, row, col, color if color != '' else None, text)
+
+def drawDrivers(app, row, col, cell, currLog):
+    count = 0
+    color = ''
+    ids = []
+    for i in range(len(app.drivers)):
+        driverLoc = currLog[i][1]
+        if driverLoc == cell:
+            color += app.driverColors[currLog[i][0] % len(app.driverColors)] + ' '
+            count += 1
+            ids.append(currLog[i][0])
+    if count > 0:
+        drawDriver(app, row, col, color[:-1].split() if color != '' else None, count, ids)
+     
 def drawDriver(app, row, col, colors, count, ids):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
     cellWidth, cellHeight = getCellSize(app)
@@ -163,14 +184,14 @@ def drawDriver(app, row, col, colors, count, ids):
         cx = cellLeft + colNumber * (diameter + 2 * padding) + radius + padding
         cy = cellTop + rowNumber * (diameter + 2 * padding) + radius + padding
         drawCircle(cx, cy, radius, fill=colors[i])
-        drawLabel(ids[i], cx, cy, size = 30 if count == 1 else 15)
+        drawLabel(ids[i], cx, cy, size = 23 if count == 1 else 15)
 
 def drawCell(app, row, col, color, text):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
     cellWidth, cellHeight = getCellSize(app)
     drawRect(cellLeft, cellTop, cellWidth, cellHeight,
              fill=color, border='black')
-    drawLabel(text, cellLeft + cellWidth//2, cellTop + cellHeight//2, size = 30)
+    drawLabel(text, cellLeft + cellWidth//2, cellTop + cellHeight//2, size = 23)
 
 def getCellLeftTop(app, row, col):
     cellWidth, cellHeight = getCellSize(app)
